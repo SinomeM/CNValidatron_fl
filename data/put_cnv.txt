@@ -1,0 +1,2 @@
+sample_ID	chr	start	end	numsnp	CN	conf	GT	length	densnp	stitch	gap	overlap	locus
+aaa	1	 145390000	145810000	100	1	100	1	1000	1000	1000	1000	1000	TAR

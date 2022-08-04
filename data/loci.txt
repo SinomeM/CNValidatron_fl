@@ -1,0 +1,2 @@
+locus	chr	start	end
+TAR	1	145390000	145810000

@@ -1,0 +1,2 @@
+sample_ID	file_path	batch	file_path_tabix
+aaa	/path/to/file/	1	./toy_snp_array_noCNV.txt.gz
