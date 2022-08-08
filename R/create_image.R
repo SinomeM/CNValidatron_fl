@@ -11,7 +11,7 @@
 #'
 #' @export
 
-cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5) {
+cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T) {
 
   # check if eps is even, n must be even as well
   # !!
@@ -23,15 +23,18 @@ cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5) {
   dt <- dt[chr == ch & between(position, a, b), ]
 
   # LRR values higher than 2 are set to 2, lower than -2 to -2
-  dt[LRR > 2, LRR := 2][LRR < -2, LRR := -2]
+  if (adj) dt[LRRadj > 2, LRRadj := 2][LRRadj < -2, LRRadj := -2]
+  else dt[LRR > 2, LRR := 2][LRR < -2, LRR := -2]
 
-  lrr <- dt[ , .(position, LRR)]
+  if (adj) lrr <- dt[ , .(position, LRRadj)]
+  else lrr <- dt[ , .(position, LRR)]
   baf <- dt[ , .(position, BAF)]
 
   # two n*np matrix
   np <- (n/2) - (eps/2)
 
-  lrr[, x := ((position-a) / (b-a)) * n ][, y := ((LRR+2) / 4) * np]
+  if (adj) lrr[, x := ((position-a) / (b-a)) * n ][, y := ((LRRadj+2) / 4) * np]
+  else lrr[, x := ((position-a) / (b-a)) * n ][, y := ((LRR+2) / 4) * np]
   baf[, x := ((position-a) / (b-a)) * n ][, y := BAF * np]
 
   # compose the final matrix
