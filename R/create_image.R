@@ -58,7 +58,11 @@ cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T) {
   # change NAs to 0s
   dtm[is.na(N), N := 0]
 
+  # from xy values to the actual matrix
+  setorder(dtm, -y, x)
+  dt <- matrix(dtm$N, ncol = n, byrow = T)
 
+  # heatmap-like plot, for debugging purposes
   pl <- ggplot(dtm, aes(x,y, fill = -N)) +
           geom_tile(show.legend=F) +
           #geom_tile() +
@@ -67,5 +71,5 @@ cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T) {
           ylim(0, n) + xlim(0,n) +
           scale_fill_distiller(type = "seq", palette = "Greys")
 
-  return(list(dtm, pl))
+  return(list(dt, pl))
 }

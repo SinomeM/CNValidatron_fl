@@ -12,6 +12,4 @@ source("./R/create_image.R")
 tmp <- cnv_image_matrix(tmpd, tmpl, 16, 2, 2)
 tmpm <- tmp[[1]]
 tmp[[2]]
-setorder(tmpm, -y, x)
 tmpm
-matrix(tmpm$N, ncol = 16, byrow = T)
