@@ -11,4 +11,4 @@ tmpl <- fread("./data/loci.txt")
 source("./R/create_image.R")
 tmp <- cnv_image_matrix(dt = tmpd, region = tmpl, n = 32, eps = 2,
                         sides = 4, adj = T, path_img = "./tmp/prova.png")
-
+tmp
