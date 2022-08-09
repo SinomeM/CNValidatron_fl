@@ -11,7 +11,7 @@
 #'
 #' @export
 
-cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T) {
+cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T, path_img) {
 
   # check if eps is even, n must be even as well
   # !!
@@ -45,8 +45,8 @@ cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T) {
 
   dtm <- dtm[, .N, by= list(x,y)]
 
-  # scale it to 0:128
-  dtm[, N := round(((N-min(dtm$N)) / max(dtm$N)) * 128)]
+  # scale it to [0,1]
+  dtm[, N := ((N-min(dtm$N)) / max(dtm$N))]
 
   # create all possible x y positions
   tmp <- as.data.table(gtools::permutations(n, 2))
@@ -62,14 +62,7 @@ cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T) {
   setorder(dtm, -y, x)
   dt <- matrix(dtm$N, ncol = n, byrow = T)
 
-  # heatmap-like plot, for debugging purposes
-  pl <- ggplot(dtm, aes(x,y, fill = -N)) +
-          geom_tile(show.legend=F) +
-          #geom_tile() +
-          theme(axis.title = element_blank(), axis.ticks = element_blank(),
-                axis.text = element_blank(), panel.background = element_blank()) +
-          ylim(0, n) + xlim(0,n) +
-          scale_fill_distiller(type = "seq", palette = "Greys")
+  png::writePNG(dt, path_img)
 
-  return(list(dt, pl))
+  return(dt)
 }
