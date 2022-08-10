@@ -14,27 +14,27 @@
 cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T, path_img) {
 
   # check if eps is even, n must be even as well
-  # !!
+  if ((n %% 2) == 0) & (eps %% 2) != 0) stop("eps must be even if n is even")
+  if ((n %% 2) != 0) & (eps %% 2) == 0) stop("eps must be odd if n is odd")
 
   # extract the relevant markers
-  ch <- region$chr; st <- region$start; en <- region$end; len <- en-st
+  ch <- region$chr; st <- region$start; en <- region$end; len <- en-st+1
   a <- st - (len*sides); b <- en + (len*sides)
 
   dt <- dt[chr == ch & between(position, a, b), ]
+  
+  if (adj) dt[, LRR := LRRadj]
 
   # LRR values higher than 2 are set to 2, lower than -2 to -2
-  if (adj) dt[LRRadj > 2, LRRadj := 2][LRRadj < -2, LRRadj := -2]
-  else dt[LRR > 2, LRR := 2][LRR < -2, LRR := -2]
+  dt[LRR > 2, LRR := 2][LRR < -2, LRR := -2]
 
-  if (adj) lrr <- dt[ , .(position, LRRadj)]
-  else lrr <- dt[ , .(position, LRR)]
+  lrr <- dt[ , .(position, LRR)]
   baf <- dt[ , .(position, BAF)]
 
   # two n*np matrix
-  np <- (n/2) - (eps/2)
+  np <- round((n-eps) / 2)
 
-  if (adj) lrr[, x := ((position-a) / (b-a)) * n ][, y := ((LRRadj+2) / 4) * np]
-  else lrr[, x := ((position-a) / (b-a)) * n ][, y := ((LRR+2) / 4) * np]
+  lrr[, x := ((position-a) / (b-a)) * n ][, y := ((LRR+2) / 4) * np]
   baf[, x := ((position-a) / (b-a)) * n ][, y := BAF * np]
 
   # compose the final matrix
