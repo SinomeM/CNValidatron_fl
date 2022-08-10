@@ -46,7 +46,7 @@ cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T, path_
   dtm <- dtm[, .N, by= list(x,y)]
 
   # scale it to [0,1]
-  dtm[, N := ((N-min(dtm$N)) / max(dtm$N))]
+  dtm[, N := ((N-min(dtm$N, na.rm = T)) / max(dtm$N, na.rm = T))]
 
   # create all possible x y positions
   tmp <- as.data.table(gtools::permutations(n, 2))
