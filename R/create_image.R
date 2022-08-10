@@ -14,8 +14,8 @@
 cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T, path_img) {
 
   # check if eps is even, n must be even as well
-  if ((n %% 2) == 0) & (eps %% 2) != 0) stop("eps must be even if n is even")
-  if ((n %% 2) != 0) & (eps %% 2) == 0) stop("eps must be odd if n is odd")
+  if ((n %% 2) == 0 & (eps %% 2) != 0) stop("eps must be even if n is even")
+  if ((n %% 2) != 0 & (eps %% 2) == 0) stop("eps must be odd if n is odd")
   
   if (eps > 0.1*n) stop("eps value should not exeed 10% of n")
 
