@@ -41,9 +41,13 @@ source('./R/02_new_dev_functions.R')
 ii <- 12
 cc <- vi_cnv[numsnp > 40 & Visual_Output == 1, ][ii]
 
-print(check_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, in_out_ratio = 3))
+ior <- 3
+shlrr <- 0.25
+shlrr <- NULL
+print(check_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps,
+                in_out_ratio = ior, shrink_lrr = shlrr))
 
-tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2, w = 16, in_out_ratio = 3)
-tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2, w = 32, in_out_ratio = 3)
-tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2, w = 50, in_out_ratio = 3)
-tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2, w = 64, in_out_ratio = 3)
+tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2,
+                w = 32, in_out_ratio = ior, shrink_lrr = shlrr)
+tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2,
+                w = 64, in_out_ratio = ior, shrink_lrr = shlrr)

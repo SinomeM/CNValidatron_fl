@@ -10,7 +10,7 @@
 #        the cnv length will be addded on each side
 
 load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
-                          min_lrr, max_lrr) {
+                          min_lrr, max_lrr, shrink_lrr = NULL) {
   chr <- cnv$chr
   start <- cnv$start
   end <- cnv$end
@@ -20,10 +20,7 @@ load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr
   dt <- fread(cmd = paste0("tabix ", tbx_path, " ", chr, ":", start - (in_out_ratio*len),
                           "-", end + (in_out_ratio*len)), header = F)
 
-  if (adjusted_lrr) {
-    colnames(dt) <- c("chr", "position", "end", "LRR", "BAF", "LRRadj")
-    dt[, end := NULL]
-  }
+  if (adjusted_lrr) colnames(dt) <- c("chr", "position", "end", "LRR", "BAF", "LRRadj")
   else colnames(dt) <- c("chr", "position", "LRR", "BAF")
 
   if (!is.null(snps)) dt <- dt[paste0(chr, position) %in% snps[, paste0(Chr, Position)], ]
@@ -37,18 +34,42 @@ load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr
   # restrict the lrr space
   dt[lrr > max_lrr, lrr := max_lrr][lrr < min_lrr, lrr := min_lrr]
   # id lrr is missing outside of the cnv 'impute' it
-  dt[is.na(lrr) & !between(position, start, end), lrr := dt[!between(position, start, end), mean(lrr, na.rm = T)]]
+  dt[is.na(lrr) & !between(position, start, end), lrr := dt[!between(position, start, end),
+                                                              mean(lrr, na.rm = T)]]
   # if baf is missing outised the cnv set it to either 0 or 1
   dt[is.na(baf) & !between(position, start, end), baf := sample(rep(0:1, length.out = .N))]
   # if lrr or baf is missing inside the cnv exclude the point
   dt <- dt[!((is.na(lrr) | is.na(baf)) & between(position, start, end)),]
 
-  return(dt)
+  # some more processing
+  if (!is.null(shrink_lrr)) {
+    dt[position < start, group := 1][between(position, start, end), group := 2][
+         position > end, group := 3]
+    # snps in each group get pulled towards the group mean relative to their distance
+    m1 <- dt[group == 1, mean(lrr, na.rm = T)]
+    m2 <- dt[group == 2, mean(lrr, na.rm = T)]
+    m3 <- dt[group == 3, mean(lrr, na.rm = T)]
+    dt[group == 1 & lrr > m1, lrr := lrr - (lrr-m1)*shrink_lrr][
+         group == 1 & lrr < m1, lrr := lrr + (lrr-m1)*shrink_lrr]
+    dt[group == 2 & lrr > m2, lrr := lrr - (lrr-m2)*shrink_lrr][
+         group == 2 & lrr < m2, lrr := lrr + (lrr-m2)*shrink_lrr]
+    dt[group == 3 & lrr > m3, lrr := lrr - (lrr-m3)*shrink_lrr][
+         group == 3 & lrr < m3, lrr := lrr + (lrr-m3)*shrink_lrr]
+  }
+
+  # ouliers removal (3 SDs?)
+
+  ## TBD !!!!
+
+  return(dt[, .(chr, position, lrr, baf)])
 
 }
 
+### --- ### --- ###
+
 plot_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
-                     w = 64, z_ratio = 0.1, tmp_plot = 0, min_lrr = -1.2, max_lrr = 1) {
+                     w = 64, z_ratio = 0.1, tmp_plot = 0, min_lrr = -1.2, max_lrr = 1,
+                     shrink_lrr = NULL) {
   # initial checks
   if ((w %% 2) != 0) stop('w must be even')
 
@@ -62,7 +83,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
   w <- w-1
 
   # load snps data
-  dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr)
+  dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr, shrink_lrr)
 
   # move position to the x coordinates in the new system
   len <- cnv$end - cnv$start + 1
@@ -113,11 +134,13 @@ plot_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
 
 }
 
+### --- ### --- ###
+
 check_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
-                      min_lrr = -1.2, max_lrr = 1) {
+                      min_lrr = -1.2, max_lrr = 1, shrink_lrr = NULL) {
 
   # load snps data
-  dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr)
+  dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr, shrink_lrr)
 
   dt[between(position, cnv$start, cnv$end), inside := T][is.na(inside), inside := F]
 
