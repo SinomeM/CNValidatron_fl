@@ -1,11 +1,13 @@
 #' Create a n*n machine-freindly image of the classic LRR BAF plots
 #'
+#' @param dt the output of `QCtreeCNV:::get_region_tabix()`
+#' @param region one line data.table with CNV position information
 #' @param n image dimension in pixels
-#' @dt the output of `QCtreeCNV:::get_region_tabix()`
-#' @region one line data.table with CNV position information
-#' @n number of pixel per side of the final matrix
-#' @eps epsilon, number of empty pixels "between" the two plots, must be even
-#' @sides proportion of the CNV length in each side region (simmetric)
+#' @param n number of pixel per side of the final matrix
+#' @param eps epsilon, number of empty pixels "between" the two plots, must be even
+#' @param sides proportion of the CNV length in each side region (simmetric)
+#' @param adj use `LRRadj` or not
+#' @param path_img where to save the PNG
 #'
 #' @import data.table
 #'
@@ -16,7 +18,7 @@ cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T, path_
   # check if eps is even, n must be even as well
   if ((n %% 2) == 0 & (eps %% 2) != 0) stop("eps must be even if n is even")
   if ((n %% 2) != 0 & (eps %% 2) == 0) stop("eps must be odd if n is odd")
-  
+
   if (eps > 0.1*n) stop("eps value should not exeed 10% of n")
 
   # extract the relevant markers
@@ -24,7 +26,7 @@ cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T, path_
   a <- st - (len*sides); b <- en + (len*sides)
 
   dt <- dt[chr == ch & between(position, a, b), ]
-  
+
   if (adj) dt[, LRR := LRRadj]
 
   # LRR values higher than 2 are set to 2, lower than -2 to -2
@@ -41,7 +43,7 @@ cnv_image_matrix <- function(dt, region, n, eps = 4, sides = 0.5, adj = T, path_
   npp <- n/2 + eps
   lrr[, y := y + npp]
   dtm <- round(rbind(lrr[, .(x, y)], baf[, .(x, y)]))
-  
+
   # in the n*n table x and y are [1,n]
   dtm[, x := x+1][, y := y+1]
 
