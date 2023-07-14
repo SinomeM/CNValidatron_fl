@@ -8,7 +8,9 @@
 # @param snps the snps file for PennCNV, as data.table
 # @param in_out_ratio ratio of bp otside the cnv vs inside, per side. A value of one means
 #        the cnv length will be addded on each side
-load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T) {
+
+load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
+                          min_lrr, max_lrr) {
   chr <- cnv$chr
   start <- cnv$start
   end <- cnv$end
@@ -33,11 +35,11 @@ load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr
 
   # some preprocessing
   # restrict the lrr space
-  dt[lrr > 1.2, lrr := 1.2][lrr < -1.4, lrr := -1.4]
+  dt[lrr > max_lrr, lrr := max_lrr][lrr < min_lrr, lrr := min_lrr]
   # id lrr is missing outside of the cnv 'impute' it
-  dt[is.na(lrr) & !between(position, start, end), lrr := dt[!between(position, start, end), mean(lrr)]]
+  dt[is.na(lrr) & !between(position, start, end), lrr := dt[!between(position, start, end), mean(lrr, na.rm = T)]]
   # if baf is missing outised the cnv set it to either 0 or 1
-  dt[is.na(baf) & !between(position, start, end), sample(rep(0:1, length.out = .N))]
+  dt[is.na(baf) & !between(position, start, end), baf := sample(rep(0:1, length.out = .N))]
   # if lrr or baf is missing inside the cnv exclude the point
   dt <- dt[!((is.na(lrr) | is.na(baf)) & between(position, start, end)),]
 
@@ -46,7 +48,7 @@ load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr
 }
 
 plot_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
-                     w = 128, z_ratio = 0.1) {
+                     w = 64, z_ratio = 0.1, tmp_plot = 0, min_lrr = -1.2, max_lrr = 1) {
   # initial checks
   if ((w %% 2) != 0) stop('w must be even')
 
@@ -54,23 +56,80 @@ plot_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
   z <- round(w * z_ratio)
   if ((z %% 2) != 0) z <- z - 1
   k <- (w - z)/2
-  if ((k %% 2) != 0) stop('something wrong')
-  if (((k*2) + z) != w) stop('something else wrong')
+  if (((k*2) + z) != w) stop('something wrong')
+
+  # everything will be [0,w-1] then I will add 1 to make it [1,w]
+  w <- w-1
 
   # load snps data
-  dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr)
+  dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr)
 
   # move position to the x coordinates in the new system
-  dt[, x := round(((position-min(position))/(max(position)-min(position))) * w)]
+  len <- cnv$end - cnv$start + 1
+  ss <- cnv$start - (in_out_ratio*len);  ee <- cnv$end + (in_out_ratio*len)
+  dt[, x := round(((position-ss)/(ee-ss)) * w)]
 
   # each point need to be used for both lrr and baf so dt must be duplicated
   dt_lrr <- copy(dt)
   dt_baf <- copy(dt)
 
   # move lrr and baf on hte y coordinates in the new system
-  dt_lrr[, y := round(((lrr-min(lrr))/(max(lrr)-min(lrr))) * k)]
-  dt_baf[, y := round(((baf-min(baf))/(max(baf)-min(baf))) * k) + k + z]
+  dt_lrr[, y := round(((lrr-(min_lrr))/(max_lrr-(min_lrr))) * k)]
+  dt_baf[, y := round(((baf-0)/(1-0)) * k) + k + z]
 
-  return(list(dt_lrr, dt_baf))
+  # pixel coordinates must be > 0
+  dt_baf[, ':=' (x = x+1, y = y+1)]
+  dt_lrr[, ':=' (x = x+1, y = y+1)]
+  w <- w+1
+
+  # temporary check
+  if (tmp_plot == 1) {
+    a <- ggplot(dt_lrr, aes(x, y)) + geom_point() + xlim(0, w) + ylim(0, k) + theme_bw()
+    b <- ggplot(dt_baf, aes(x, y)) + geom_point() + xlim(0, w) + ylim(k+z, w) + theme_bw()
+    print(cowplot::plot_grid(b, a, ncol = 1))
+  }
+
+  # create the pixel map
+  dt_lrr <- dt_lrr[, .N, by = c('x', 'y')]
+  dt_baf <- dt_baf[, .N, by = c('x', 'y')]
+  dt <- as.data.table(rbind(t(combn(1:w, 2)), t((combn(w:1, 2))))) # almost all combinations
+  colnames(dt) <- c('x', 'y')
+  dt <- rbind(dt, data.table(x = 1:w, y = 1:w)) # the diagonal was missing
+  dt <- merge(dt, dt_lrr, by = c('x', 'y'), all.x = T)
+  setnames(dt, 'N', 'a')
+  dt <- merge(dt, dt_baf, by = c('x', 'y'), all.x = T)
+  setnames(dt, 'N', 'b')
+  dt[!is.na(a), value := a]
+  dt[!is.na(b), value := b]
+  dt[!is.na(a) & !is.na(b), value := a+b]
+  dt[is.na(a) & is.na(b), value := 0]
+  dt <- dt[, .(x, y, value)]
+
+  if (tmp_plot == 2)
+    print(ggplot(dt, aes(x, y, fill = value)) + geom_tile() + theme_bw() +
+            scale_fill_gradient(low="white", high="black"))
+
+  return(dt)
+
+}
+
+check_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
+                      min_lrr = -1.2, max_lrr = 1) {
+
+  # load snps data
+  dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr)
+
+  dt[between(position, cnv$start, cnv$end), inside := T][is.na(inside), inside := F]
+
+  len <- cnv$end - cnv$start + 1
+  ss <- cnv$start - (in_out_ratio*len)
+  ee <- cnv$end + (in_out_ratio*len)
+
+  a <- ggplot(dt, aes(x = position, y = baf, colour = inside)) + geom_point() +
+    xlim(ss, ee) + theme_bw()
+  b <- ggplot(dt, aes(x = position, y = lrr, colour = inside)) + geom_point() +
+    xlim(ss, ee) + ylim(min_lrr, max_lrr) + theme_bw()
+
+  cowplot::plot_grid(a,b, ncol = 1)
 
 }

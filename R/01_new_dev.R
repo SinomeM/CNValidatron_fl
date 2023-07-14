@@ -2,6 +2,7 @@
 
 setwd('~/Documents/CNValidatron_fl')
 library(data.table)
+library(ggplot2)
 
 # Load CNV and samples table from UKB export
 cnvs <- fread('~/Documents/UKB_data/edited/cvns.txt')
@@ -37,8 +38,12 @@ length(unique(cnvs$locus)) == nrow(cnvs)
 
 source('./R/02_new_dev_functions.R')
 
-tmp <- load_snps_tbx(cnvs[1], samples[sample_ID == cnvs[1, sample_ID], ], snps = snps)
+ii <- 12
+cc <- vi_cnv[numsnp > 40 & Visual_Output == 1, ][ii]
 
+print(check_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, in_out_ratio = 3))
 
-tmp <- plot_cnv(cnvs[1], samples[sample_ID == cnvs[1, sample_ID], ], snps = snps)
-tmp
+tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2, w = 16, in_out_ratio = 3)
+tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2, w = 32, in_out_ratio = 3)
+tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2, w = 50, in_out_ratio = 3)
+tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2, w = 64, in_out_ratio = 3)
