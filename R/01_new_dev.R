@@ -35,19 +35,24 @@ length(unique(cnvs$locus)) == nrow(cnvs)
 
 
 ## STEP 1 ##
+# produce the plots in a format the algorithm can undrstand best
 
 source('./R/02_new_dev_functions.R')
 
+# option 1: pixelated image of classic BAF LRR in a square figure
 ii <- 12
 cc <- vi_cnv[numsnp > 40 & Visual_Output == 1, ][ii]
 
-ior <- 3
-shlrr <- 0.25
-shlrr <- NULL
+ior <- 3; shlrr <- 0.25; width <- 50
+
 print(check_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps,
                 in_out_ratio = ior, shrink_lrr = shlrr))
 
 tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2,
-                w = 32, in_out_ratio = ior, shrink_lrr = shlrr)
-tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2,
-                w = 64, in_out_ratio = ior, shrink_lrr = shlrr)
+                w = width, in_out_ratio = ior, shrink_lrr = shlrr)
+
+## STEP 2 ##
+# create and store the data for each CNV
+
+# - In torch the plots will be tensors
+# - In torch the data handling is done via a dataloader()

@@ -30,7 +30,7 @@ load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr
   if (adjusted_lrr) setnames(dt, c('BAF', 'LRRadj'), c('baf', 'lrr'))
   else setnames(dt, c('BAF', 'LRR'), c('baf', 'lrr'))
 
-  # some preprocessing
+  ## some preprocessing ##
   # restrict the lrr space
   dt[lrr > max_lrr, lrr := max_lrr][lrr < min_lrr, lrr := min_lrr]
   # id lrr is missing outside of the cnv 'impute' it
@@ -41,25 +41,30 @@ load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr
   # if lrr or baf is missing inside the cnv exclude the point
   dt <- dt[!((is.na(lrr) | is.na(baf)) & between(position, start, end)),]
 
-  # some more processing
+  ## some more processing ##
+  dt[position < start, group := 1][between(position, start, end), group := 2][
+       position > end, group := 3]
+  ms1 <- dt[group == 1, c(mean(lrr, na.rm = T), sd(lrr, na.rm = T))]
+  ms2 <- dt[group == 2, c(mean(lrr, na.rm = T), sd(lrr, na.rm = T))]
+  ms3 <- dt[group == 3, c(mean(lrr, na.rm = T), sd(lrr, na.rm = T))]
+
   if (!is.null(shrink_lrr)) {
-    dt[position < start, group := 1][between(position, start, end), group := 2][
-         position > end, group := 3]
     # snps in each group get pulled towards the group mean relative to their distance
-    m1 <- dt[group == 1, mean(lrr, na.rm = T)]
-    m2 <- dt[group == 2, mean(lrr, na.rm = T)]
-    m3 <- dt[group == 3, mean(lrr, na.rm = T)]
-    dt[group == 1 & lrr > m1, lrr := lrr - (lrr-m1)*shrink_lrr][
-         group == 1 & lrr < m1, lrr := lrr + (lrr-m1)*shrink_lrr]
-    dt[group == 2 & lrr > m2, lrr := lrr - (lrr-m2)*shrink_lrr][
-         group == 2 & lrr < m2, lrr := lrr + (lrr-m2)*shrink_lrr]
-    dt[group == 3 & lrr > m3, lrr := lrr - (lrr-m3)*shrink_lrr][
-         group == 3 & lrr < m3, lrr := lrr + (lrr-m3)*shrink_lrr]
+    dt[group == 1 & lrr > ms1[1], lrr := lrr - (lrr-ms1[1])*shrink_lrr][
+         group == 1 & lrr < ms1[1], lrr := lrr + (lrr-ms1[1])*shrink_lrr]
+    dt[group == 2 & lrr > ms2[1], lrr := lrr - (lrr-ms2[1])*shrink_lrr][
+         group == 2 & lrr < ms2[1], lrr := lrr + (lrr-ms2[1])*shrink_lrr]
+    dt[group == 3 & lrr > ms3[1], lrr := lrr - (lrr-ms3[1])*shrink_lrr][
+         group == 3 & lrr < ms3[1], lrr := lrr + (lrr-ms3[1])*shrink_lrr]
   }
 
-  # ouliers removal (3 SDs?)
+  # ouliers removal, 3SDs
+  dt[group == 1 & !between(lrr, ms1[1]-3*ms1[2], ms1[1]+3*ms1[2]), lrr := NA]
+  dt[group == 1 & !between(lrr, ms2[1]-3*ms2[2], ms2[1]+3*ms2[2]), lrr := NA]
+  dt[group == 1 & !between(lrr, ms3[1]-3*ms3[2], ms3[1]+3*ms3[2]), lrr := NA]
+  dt <- dt[!is.na(lrr), ]
 
-  ## TBD !!!!
+
 
   return(dt[, .(chr, position, lrr, baf)])
 
