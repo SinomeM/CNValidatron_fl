@@ -161,3 +161,31 @@ check_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T
   cowplot::plot_grid(a,b, ncol = 1)
 
 }
+
+
+### --- ### --- ###
+
+save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64,
+                              in_out_ratio = 3, shrink_lrr = 0.2) {
+  dir.create(root)
+  dir.create(paste0(root, '/true_del')); dir.create(paste0(root, '/true_dup'))
+  dir.create(paste0(root, '/unk_dup')); dir.create(paste0(root, '/unk_del'))
+  dir.create(paste0(root, '/false'))
+
+  for (i in 1:nrow(cnvs)) {
+    a <- cnvs[i]
+
+    if (a$GT == 1)
+      if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/', a$sample_ID, '_', a$start, '.png')
+      if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
+      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_del/', a$sample_ID, '_', a$start, '.png')
+    if (a$GT == 2)
+      if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/', a$sample_ID, '_', a$start, '.png')
+      if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
+      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_del/', a$sample_ID, '_', a$start, '.png')
+
+      dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
+                     w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
+      imager::save.image(imager::as.cimg(dt), pt)
+  }
+}

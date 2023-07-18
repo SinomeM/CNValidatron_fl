@@ -56,3 +56,13 @@ tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_pl
 
 # - In torch the plots will be tensors
 # - In torch the data handling is done via a dataloader()
+# - Since the function torchvision::image_folder_dataset() exists, the
+#   easiest thing to do is save all plots as PNG in the expected file
+#   structure
+
+# just to test data structure etc really, way too small to even early testing
+# of an actual model
+first_test_cnvs <- vi_cnv[numsnp > 40]
+
+save_pngs_dataset('/home/simone/Documents/CNValidatron_fl/tmp/first_test',
+                  first_test_cnvs, samples, snps)
