@@ -48,8 +48,8 @@ ior <- 3; shlrr <- 0.25; width <- 50
 print(check_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps,
                 in_out_ratio = ior, shrink_lrr = shlrr))
 
-tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_plot = 2,
-                w = width, in_out_ratio = ior, shrink_lrr = shlrr)
+tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps,
+                tmp_plot = 2, w = width, in_out_ratio = ior, shrink_lrr = shlrr)
 
 ## STEP 2 ##
 # create and store the data for each CNV
@@ -64,10 +64,11 @@ tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_pl
 # of an actual model
 first_test_cnvs <- vi_cnv[numsnp > 40 & Visual_Output %in% 1:3, ]
 
-save_pngs_dataset('/home/simone/Documents/CNValidatron_fl/tmp/first_test',
-                  first_test_cnvs, samples, snps)
+test_path <- '/home/simone/Documents/CNValidatron_fl/tmp/first_test'
+# run if necessary
+if (F) save_pngs_dataset(test_path, first_test_cnvs, samples, snps)
 
-tdt <- torchvision::image_folder_dataset('/home/simone/Documents/CNValidatron_fl/tmp/first_test')
+tdt <- torchvision::image_folder_dataset(test_path)
 
 str(tdt)
 tdt$targets
