@@ -62,7 +62,12 @@ tmp <- plot_cnv(cc, samples[sample_ID == cc[, sample_ID], ], snps = snps, tmp_pl
 
 # just to test data structure etc really, way too small to even early testing
 # of an actual model
-first_test_cnvs <- vi_cnv[numsnp > 40]
+first_test_cnvs <- vi_cnv[numsnp > 40 & Visual_Output %in% 1:3, ]
 
 save_pngs_dataset('/home/simone/Documents/CNValidatron_fl/tmp/first_test',
                   first_test_cnvs, samples, snps)
+
+tdt <- torchvision::image_folder_dataset('/home/simone/Documents/CNValidatron_fl/tmp/first_test')
+
+str(tdt)
+tdt$targets

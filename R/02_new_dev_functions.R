@@ -17,8 +17,13 @@ load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr
   len <- end - start + 1
   tbx_path <- samp$file_path_tabix
 
-  dt <- fread(cmd = paste0("tabix ", tbx_path, " ", chr, ":", start - (in_out_ratio*len),
+  st <- start - (in_out_ratio*len)
+  st <- ifelse(st < 0, 0, st)
+
+  dt <- fread(cmd = paste0("tabix ", tbx_path, " ", chr, ":", st,
                           "-", end + (in_out_ratio*len)), header = F)
+
+  if (nrow(dt) == 0) stop('File: ', tbx_path, ' seems empty or broken\n')
 
   if (adjusted_lrr) colnames(dt) <- c("chr", "position", "end", "LRR", "BAF", "LRRadj")
   else colnames(dt) <- c("chr", "position", "LRR", "BAF")
