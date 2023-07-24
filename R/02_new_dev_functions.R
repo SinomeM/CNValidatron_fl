@@ -185,12 +185,13 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64,
       if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
       if (a$Visual_Output == 3) pt <- paste0(root, '/unk_del/', a$sample_ID, '_', a$start, '.png')
     if (a$GT == 2)
-      if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/', a$sample_ID, '_', a$start, '.png')
+      if (a$Visual_Output == 1) pt <- paste0(root, '/true_dup/', a$sample_ID, '_', a$start, '.png')
       if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
-      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_del/', a$sample_ID, '_', a$start, '.png')
+      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_dup/', a$sample_ID, '_', a$start, '.png')
 
       dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
                      w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
+      dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
       imager::save.image(imager::as.cimg(dt), pt)
   }
 }
