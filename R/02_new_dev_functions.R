@@ -170,8 +170,10 @@ check_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T
 
 ### --- ### --- ###
 
-save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64,
-                              in_out_ratio = 3, shrink_lrr = 0.2) {
+save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
+                              shrink_lrr = 0.2, flip_chance = 0.5) {
+  if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a dfferent path')
+
   dir.create(root)
   dir.create(paste0(root, '/true_del')); dir.create(paste0(root, '/true_dup'))
   dir.create(paste0(root, '/unk_dup')); dir.create(paste0(root, '/unk_del'))
@@ -191,7 +193,15 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64,
 
       dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
                      w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
+
       dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
       imager::save.image(imager::as.cimg(dt), pt)
+
+      # Data agumentation 1, image flipping
+      if (runif(1) >= flip_chance) {
+        dt[, x := abs(x-(max(x)+1))] # flip the x axis
+        pt <- gsub('\\.png', '_flip\\.png', pt)
+        imager::save.image(imager::as.cimg(dt), pt)
+      }
   }
 }

@@ -72,8 +72,9 @@ source('./R/02_new_dev_functions.R')
 
 # just to test data structure etc really, way too small to even early testing
 # of an actual model
-train_test <- vi_cnv[numsnp > 40 & Visual_Output %in% 1:3, ]
-valid_test <- vi_cnv[] # TBD!!!!
+tmp <- vi_cnv[numsnp > 40 & Visual_Output %in% 1:3, ]
+train_test <- tmp[sample(1:nrow(tmp), round(nrow(tmp)*0.7) )]
+valid_test <- fsetdiff(tmp, train_test)
 
 # run if necessary
 train_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/train'
@@ -82,6 +83,7 @@ if (F)
 valid_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/valid'
 if (F)
   save_pngs_dataset(valid_pt, valid_test, samples, snps)
+# by default the images are 64x64
 
 tdt <- torchvision::image_folder_dataset(
   train_pt, transform = . %>% transform_to_tensor())
@@ -91,7 +93,13 @@ vdt <- torchvision::image_folder_dataset(
 # Is this the correct format? Test on a simple model
 train_dl <- dataloader(tdt, batch_size = 100, shuffle = TRUE)
 valid_dl <- dataloader(vdt, batch_size = 100, shuffle = TRUE)
-str(train_dl)
+
+batch <- train_dl %>%
+  dataloader_make_iter() %>%
+  dataloader_next()
+
+dim(batch$x)
+batch$y
 
 convnet <- nn_module(
   "convnet",
@@ -156,6 +164,21 @@ fitted <- convnet %>%
 #   to torch since it's trivial, rotations does not make any sense.
 # - Other? one example could be "transplant" the CNV to a different region,
 #   not sure how much would make sense
+
+
+tdt <- torchvision::image_folder_dataset(
+  train_pt, transform = . %>% transform_to_tensor() %>%
+                              transform_random_horizontal_flip())
+vdt <- torchvision::image_folder_dataset(
+  valid_pt, transform = . %>% transform_to_tensor() %>%
+                              transform_random_horizontal_flip())
+# I'm not sure if transform_random_horizontal_flip() adds a flipped copy
+# or flip the actual example. In this context I think I want the first, since
+# each example is quite expensive to produce. Since it's not clear in the
+# documentation, I think I'll do it manually.
+
+
+
 
 # --------------------------------------------------------------------------- #
 
