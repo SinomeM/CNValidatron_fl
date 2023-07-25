@@ -413,6 +413,13 @@ tmp <- vi_cnv[numsnp > 40 & Visual_Output %in% 1:3, ]
 train_test <- tmp[sample(1:nrow(tmp), round(nrow(tmp)*0.7) )]
 valid_test <- fsetdiff(tmp, train_test)
 
+# class imbalance?
+train_test[, .N, by = Visual_Output]
+valid_test[, .N, by = Visual_Output]
+# false and unknown are similar and less than half of the true ones
+# I could add more false and unknown but also maybe just decrease the minimum
+# number of snps
+
 # save plots
 npx = 64
 train_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/test1/train'
@@ -421,12 +428,13 @@ save_pngs_dataset(train_pt, train_test, samples, snps, w = npx, flip_chance = 0.
 save_pngs_dataset(valid_pt, valid_test, samples, snps, w = npx, flip_chance = 0.7)
 
 # training and validation dataloaders
+bs <- 64
 train_dl <- dataloader(torchvision::image_folder_dataset(
                          train_pt, transform = . %>% transform_to_tensor()),
-                       batch_size = 64, shuffle = TRUE)
+                       batch_size = bs, shuffle = TRUE)
 valid_dl <- dataloader(torchvision::image_folder_dataset(
                          valid_pt, transform = . %>% transform_to_tensor()),
-                       batch_size = 64, shuffle = TRUE)
+                       batch_size = bs, shuffle = TRUE)
 
 npx
 classes <- 5 # T del/dup, U del/dup, F
@@ -492,7 +500,7 @@ fitted_dropout <- model %>%
         luz_callback_early_stopping(patience = 5),
         luz_callback_lr_scheduler(
           lr_one_cycle,
-          max_lr = 0.01,
+          max_lr = 0.005,
           epochs = 50,
           steps_per_epoch = length(train_dl),
           call_on = "on_batch_end"),
