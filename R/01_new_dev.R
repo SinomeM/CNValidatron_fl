@@ -415,18 +415,18 @@ valid_test <- fsetdiff(tmp, train_test)
 
 # save plots
 npx = 64
-train_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/train'
-valid_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/valid'
+train_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/test1/train'
+valid_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/test1/valid'
 save_pngs_dataset(train_pt, train_test, samples, snps, w = npx, flip_chance = 0.7)
 save_pngs_dataset(valid_pt, valid_test, samples, snps, w = npx, flip_chance = 0.7)
 
 # training and validation dataloaders
 train_dl <- dataloader(torchvision::image_folder_dataset(
                          train_pt, transform = . %>% transform_to_tensor()),
-                       batch_size = 128, shuffle = TRUE)
+                       batch_size = 64, shuffle = TRUE)
 valid_dl <- dataloader(torchvision::image_folder_dataset(
                          valid_pt, transform = . %>% transform_to_tensor()),
-                       batch_size = 128, shuffle = TRUE)
+                       batch_size = 64, shuffle = TRUE)
 
 npx
 classes <- 5 # T del/dup, U del/dup, F
