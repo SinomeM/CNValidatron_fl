@@ -154,17 +154,16 @@ fitted <- convnet %>%
 
 
 ## STEP 3 ##
-# data agumentation
+# data augmentation
 
-# - torch includes functions to perform data agumentation quite easily
-#   but since the task is quite wierd I think I will do at least some
+# - torch includes functions to perform data augmentation quite easily
+#   but since the task is quite weird I think I will do at least some
 #   manually. E.g. a lot of plots have big holes in them or one side
 #   almost completely missing, this is something I can play with.
 # - Image flipping on the center vertical axis is something I can leave
 #   to torch since it's trivial, rotations does not make any sense.
 # - Other? one example could be "transplant" the CNV to a different region,
 #   not sure how much would make sense
-
 
 tdt <- torchvision::image_folder_dataset(
   train_pt, transform = . %>% transform_to_tensor() %>%
@@ -185,12 +184,24 @@ train_test <- tmp[sample(1:nrow(tmp), round(nrow(tmp)*0.7) )]
 valid_test <- fsetdiff(tmp, train_test)
 
 # run if necessary
+npx = 64
 train_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/train'
 if (F)
-  save_pngs_dataset(train_pt, train_test, samples, snps)
+  save_pngs_dataset(train_pt, train_test, samples, snps, w = npx)
 valid_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/valid'
 if (F)
-  save_pngs_dataset(valid_pt, valid_test, samples, snps)
+  save_pngs_dataset(valid_pt, valid_test, samples, snps, w = npx)
+
+# the second layer (regarding the 'holes' in the data) is a bit more tricky
+# and I'll work on it in the future
+
+# --- --- --- ---
+
+# Finally "transplanting" the CNV in a different region (possibly even
+# a different sample) is something I'm not sure it's helpful, I'll consider it
+# in the future
+
+# --- --- --- ----
 
 
 # --------------------------------------------------------------------------- #
@@ -200,11 +211,28 @@ if (F)
 ## STEP 4 ##
 # Is the data in the best shape? Can it improve?
 
+# At the moment I think it is worth trying as it is, I need more examples
+# and a proper model, anyway I'll think again about it in the future.
+
+# --- --- --- ---
+
 # --------------------------------------------------------------------------- #
 
 
 
 ## STEP 5 ##
 # Build a proper model not just for early testing
+source('./R/02_new_dev_functions.R')
+
+tdt <- torchvision::image_folder_dataset(
+  train_pt, transform = . %>% transform_to_tensor())
+vdt <- torchvision::image_folder_dataset(
+  valid_pt, transform = . %>% transform_to_tensor())
+
+# Is this the correct format? Test on a simple model
+train_dl <- dataloader(tdt, batch_size = 100, shuffle = TRUE)
+valid_dl <- dataloader(vdt, batch_size = 100, shuffle = TRUE)
+
+npx
 
 # --------------------------------------------------------------------------- #
