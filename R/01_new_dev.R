@@ -177,7 +177,20 @@ vdt <- torchvision::image_folder_dataset(
 # each example is quite expensive to produce. Since it's not clear in the
 # documentation, I think I'll do it manually.
 
+# it is implemented in save_pngs_dataset()
+source('./R/02_new_dev_functions.R')
 
+tmp <- vi_cnv[numsnp > 40 & Visual_Output %in% 1:3, ]
+train_test <- tmp[sample(1:nrow(tmp), round(nrow(tmp)*0.7) )]
+valid_test <- fsetdiff(tmp, train_test)
+
+# run if necessary
+train_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/train'
+if (F)
+  save_pngs_dataset(train_pt, train_test, samples, snps)
+valid_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/valid'
+if (F)
+  save_pngs_dataset(valid_pt, valid_test, samples, snps)
 
 
 # --------------------------------------------------------------------------- #
