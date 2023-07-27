@@ -421,10 +421,24 @@ valid_test[, .N, by = c('Visual_Output', 'GT')]
 
 # save plots
 npx = 64
-train_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/test1/train'
-valid_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/test1/valid'
-save_pngs_dataset(train_pt, train_test, samples, snps, w = npx, flip_chance = 0.7)
-save_pngs_dataset(valid_pt, valid_test, samples, snps, w = npx, flip_chance = 0.7)
+if (F) {
+  # minsnp 40, default
+  train_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/test1/train'
+  valid_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/test1/valid'
+  save_pngs_dataset(train_pt, train_test, samples, snps, w = npx, flip_chance = 0.7)
+  save_pngs_dataset(valid_pt, valid_test, samples, snps, w = npx, flip_chance = 0.7)
+}
+
+if (F) {
+  # minsnp 35 or lower
+  tmp <- vi_cnv[numsnp > 35 & Visual_Output %in% 1:3, ]
+  train_test <- tmp[sample(1:nrow(tmp), round(nrow(tmp)*0.75) )]
+  valid_test <- fsetdiff(tmp, train_test)
+  train_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/test2/train'
+  valid_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/test2/valid'
+  save_pngs_dataset(train_pt, train_test, samples, snps, w = npx, flip_chance = 0.7)
+  save_pngs_dataset(valid_pt, valid_test, samples, snps, w = npx, flip_chance = 0.7)
+}
 
 # training and validation dataloaders
 bs <- 64
@@ -434,6 +448,13 @@ train_dl <- dataloader(torchvision::image_folder_dataset(
 valid_dl <- dataloader(torchvision::image_folder_dataset(
                          valid_pt, transform = . %>% transform_to_tensor()),
                        batch_size = bs, shuffle = TRUE)
+
+batch <- train_dl %>%
+  dataloader_make_iter() %>%
+  dataloader_next()
+
+dim(batch$x)
+batch$y
 
 npx
 classes <- 5 # T del/dup, U del/dup, F
@@ -499,7 +520,7 @@ fitted_dropout <- model %>%
         luz_callback_early_stopping(patience = 5),
         luz_callback_lr_scheduler(
           lr_one_cycle,
-          max_lr = 0.005,
+          max_lr = 0.01,
           epochs = 50,
           steps_per_epoch = length(train_dl),
           call_on = "on_batch_end"),
