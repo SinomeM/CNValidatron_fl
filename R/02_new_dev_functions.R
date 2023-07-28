@@ -179,8 +179,34 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
   dir.create(paste0(root, '/unk_dup')); dir.create(paste0(root, '/unk_del'))
   dir.create(paste0(root, '/false'))
 
-  for (i in 1:nrow(cnvs)) {
-    a <- cnvs[i]
+ # for (i in 1:nrow(cnvs)) {
+ #   a <- cnvs[i]
+
+ #   if (a$GT == 1)
+ #     if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/', a$sample_ID, '_', a$start, '.png')
+ #     if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
+ #     if (a$Visual_Output == 3) pt <- paste0(root, '/unk_del/', a$sample_ID, '_', a$start, '.png')
+ #   if (a$GT == 2)
+ #     if (a$Visual_Output == 1) pt <- paste0(root, '/true_dup/', a$sample_ID, '_', a$start, '.png')
+ #     if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
+ #     if (a$Visual_Output == 3) pt <- paste0(root, '/unk_dup/', a$sample_ID, '_', a$start, '.png')
+
+ #     dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
+ #                    w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
+
+ #     dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
+ #     imager::save.image(imager::as.cimg(dt), pt)
+
+ #     # Data agumentation 1, image flipping
+ #     if (runif(1) >= flip_chance) {
+ #       dt[, x := abs(x-(max(x)+1))] # flip the x axis
+ #       pt <- gsub('\\.png', '_flip\\.png', pt)
+ #       imager::save.image(imager::as.cimg(dt), pt)
+ #     }
+ # }
+
+  FUN <- function(x) {
+    a <- cnvs[x]
 
     if (a$GT == 1)
       if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/', a$sample_ID, '_', a$start, '.png')
@@ -204,4 +230,7 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
         imager::save.image(imager::as.cimg(dt), pt)
       }
   }
+
+  null <- bplapply(1:nrow(cnvs), FUN)
+
 }
