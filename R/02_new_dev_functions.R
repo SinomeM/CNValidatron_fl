@@ -23,7 +23,10 @@ load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr
   dt <- fread(cmd = paste0("tabix ", tbx_path, " ", chr, ":", st,
                           "-", end + (in_out_ratio*len)), header = F)
 
-  if (nrow(dt) == 0) stop('File: ', tbx_path, ' seems empty or broken\n')
+  if (nrow(dt) == 0) {
+    warning('File: ', tbx_path, ' seems empty or broken\n')
+    return(data.table())
+  }
 
   if (adjusted_lrr) colnames(dt) <- c("chr", "position", "end", "LRR", "BAF", "LRRadj")
   else colnames(dt) <- c("chr", "position", "LRR", "BAF")
@@ -94,6 +97,10 @@ plot_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
 
   # load snps data
   dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr, shrink_lrr)
+  if (nrow(dt) == 0) {
+    warning('Empty tabix, no image generated for sample', samp$sample_ID)
+    return(data.table())
+  }
 
   # move position to the x coordinates in the new system
   len <- cnv$end - cnv$start + 1
@@ -172,38 +179,14 @@ check_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T
 
 save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
                               shrink_lrr = 0.2, flip_chance = 0.5) {
-  if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a dfferent path')
+  if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a different path')
 
   dir.create(root)
   dir.create(paste0(root, '/true_del')); dir.create(paste0(root, '/true_dup'))
   dir.create(paste0(root, '/unk_dup')); dir.create(paste0(root, '/unk_del'))
   dir.create(paste0(root, '/false'))
 
- # for (i in 1:nrow(cnvs)) {
- #   a <- cnvs[i]
-
- #   if (a$GT == 1)
- #     if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/', a$sample_ID, '_', a$start, '.png')
- #     if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
- #     if (a$Visual_Output == 3) pt <- paste0(root, '/unk_del/', a$sample_ID, '_', a$start, '.png')
- #   if (a$GT == 2)
- #     if (a$Visual_Output == 1) pt <- paste0(root, '/true_dup/', a$sample_ID, '_', a$start, '.png')
- #     if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
- #     if (a$Visual_Output == 3) pt <- paste0(root, '/unk_dup/', a$sample_ID, '_', a$start, '.png')
-
- #     dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
- #                    w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
-
- #     dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
- #     imager::save.image(imager::as.cimg(dt), pt)
-
- #     # Data agumentation 1, image flipping
- #     if (runif(1) >= flip_chance) {
- #       dt[, x := abs(x-(max(x)+1))] # flip the x axis
- #       pt <- gsub('\\.png', '_flip\\.png', pt)
- #       imager::save.image(imager::as.cimg(dt), pt)
- #     }
- # }
+  if(5 %in% cnvs$Visual_Output) dir.create(paste0(root, '/not_eval'))
 
   FUN <- function(x) {
     a <- cnvs[x]
@@ -217,13 +200,17 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
       if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
       if (a$Visual_Output == 3) pt <- paste0(root, '/unk_dup/', a$sample_ID, '_', a$start, '.png')
 
+    if (a$Visual_Output == 5) pt <- paste0(root, '/not_eval/', a$sample_ID, '_', a$start, '.png')
+
     dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
                    w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
+
+    if (nrow(dt) == 0) return(data.table())
 
     dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
     imager::save.image(imager::as.cimg(dt), pt)
 
-    # Data agumentation 1, image flipping
+    # Data augmentation 1, image flipping
     if (runif(1) >= flip_chance) {
       dt[, x := abs(x-(max(x)+1))] # flip the x axis
       pt <- gsub('\\.png', '_flip\\.png', pt)
@@ -236,28 +223,4 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
 
 }
 
-### --- ### --- ###
-
-save_pngs_testset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
-                              shrink_lrr = 0.2) {
-  if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a dfferent path')
-
-  dir.create(root)
-
-  FUN <- function(x) {
-    a <- cnvs[x]
-
-    pt <- paste0(root, '/', a$sample_ID, '_', a$start, '.png')
-
-    # test tabix file
-    dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
-                   w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
-
-    dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
-    imager::save.image(imager::as.cimg(dt), pt)
-  }
-
-  null <- bplapply(1:nrow(cnvs), FUN)
-
-}
 

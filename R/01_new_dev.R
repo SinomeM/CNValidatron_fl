@@ -556,7 +556,7 @@ if (T) {
   library(torchvision)
   library(luz)
   fitted_model <- luz_load('tmp/fitted_dropout.rds')
-  options(MulticoreParam = MulticoreParam(workers = 8))
+  options(MulticoreParam = MulticoreParam(workers = 12))
 
   cnvs <- fread('~/Documents/UKB_data/edited/cvns.txt')
   samples <- fread('~/Documents/UKB_data/edited/samples.txt')
@@ -577,6 +577,32 @@ tmp[, ':=' (V1 = NULL, index = NULL, Visual_Output = NULL)]
 
 test_dt <- fsetdiff(cnvs, tmp)
 
-for 
+if (F) {
+  for (i in 1:nrow(test_dt)) {
+    print(i)
+    dt <- load_snps_tbx(test_dt[i], samples, snps)
+    if (nrow(dt) < 40) test_dt[i, rm := T]
+  }
+  test_dt <- test_dt[is.na(rm), ]
+  saveRDS(test_dt, 'tmp/test_dt.rds')
+}
 
-save_pngs_testset('tmp/unvalidated/', test_dt, samples, snps, w = 64)
+test_dt <- readRDS('tmp/test_dt.rds')
+test_dt[, ':=' (Visual_Output = 5, rm = NULL)]
+
+
+for (i in 1:nrow(test_dt)) {
+  print(i)
+  a <- test_dt[i]
+  pt <- paste0('tmp/unvalidated/', a$sample_ID, '_', a$start, '.png')
+
+  dt <- plot_cnv(a, samples[sample_ID == a[, sample_ID], ], snps = snps,
+                 w = 64, in_out_ratio = 3, shrink_lrr = 0.2)
+  if (nrow(dt) == 0) {
+    test_dt[i, rm := T]
+    next
+  }
+
+  dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
+  imager::save.image(imager::as.cimg(dt), pt)
+}
