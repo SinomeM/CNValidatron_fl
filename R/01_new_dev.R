@@ -386,22 +386,19 @@ fitted_batchnorm <- model %>%
 
 # All lines to test the model(s) training should be here
 if (T) {
-  options(MulticoreParam = MulticoreParam(workers = 12))
   setwd('~/Documents/CNValidatron_fl')
+  library(BiocParallel)
   library(data.table)
   library(ggplot2)
   library(torch)
   library(torchvision)
-  library(torchdatasets)
   library(luz)
   source('./R/02_new_dev_functions.R')
+  options(MulticoreParam = MulticoreParam(workers = 12))
 
   # Load CNV and samples table from UKB export
-  cnvs <- fread('~/Documents/UKB_data/edited/cvns.txt')
   samples <- fread('~/Documents/UKB_data/edited/samples.txt')
-  loci <- fread('~/Documents/UKB_data/edited/loci.txt')
   snps <- fread('~/Documents/UKB_data/snppos_filtered.txt')
-  cnvs <- cnvs[numsnp >= 20,]
   # load visual validations
   tmp <- list.files('~/Documents/UKB_data/visual_inspection2/')
   tmp <- tmp[grep('visual', tmp)]
@@ -533,10 +530,53 @@ fitted_dropout <- model %>%
         ),
       verbose = TRUE)
 
+# save the preliminary fitted model
+luz_save(fitted_dropout, 'tmp/fitted_dropout.rds')
 
-# BiocParallel testing
+# --------------------------------------------------------------------------- #
 
-func <- function(x, dt) { print(dt[x]) }
-tmp <- data.table(col = 1:10)
-registered()
-bplapply(1:nrow(tmp), func, dt = tmp)
+
+
+## Test predictions and speedup new examples generation ##
+
+# the models seems decent enough to be used in some testing. My plan
+# is to use it to group the CNVs I have to validate so that it would
+# be much easier to do (visual inspection is much quicker if the calls
+# are similar).
+
+# Tho models works best with CNVs of at least 40 SNPs so that will be my focus
+# for the moment
+
+if (T) {
+  setwd('~/Documents/CNValidatron_fl')
+  source('./R/02_new_dev_functions.R')
+  library(BiocParallel)
+  library(data.table)
+  library(torch)
+  library(torchvision)
+  library(luz)
+  fitted_model <- luz_load('tmp/fitted_dropout.rds')
+  options(MulticoreParam = MulticoreParam(workers = 8))
+
+  cnvs <- fread('~/Documents/UKB_data/edited/cvns.txt')
+  samples <- fread('~/Documents/UKB_data/edited/samples.txt')
+  snps <- fread('~/Documents/UKB_data/snppos_filtered.txt')
+  cnvs <- cnvs[numsnp >= 40,]
+  # load visual validations
+  tmp <- list.files('~/Documents/UKB_data/visual_inspection2/')
+  tmp <- tmp[grep('visual', tmp)]
+  vi_cnv <- data.table()
+  for (i in tmp)
+    vi_cnv <- rbind(
+      vi_cnv,fread(paste0('~/Documents/UKB_data/visual_inspection2/', i)))
+}
+
+cnvs
+tmp <- copy(vi_cnv)
+tmp[, ':=' (V1 = NULL, index = NULL, Visual_Output = NULL)]
+
+test_dt <- fsetdiff(cnvs, tmp)
+
+for 
+
+save_pngs_testset('tmp/unvalidated/', test_dt, samples, snps, w = 64)

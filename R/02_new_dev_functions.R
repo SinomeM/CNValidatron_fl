@@ -10,7 +10,7 @@
 #        the cnv length will be addded on each side
 
 load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
-                          min_lrr, max_lrr, shrink_lrr = NULL) {
+                          min_lrr = -1.2, max_lrr = 1, shrink_lrr = NULL) {
   chr <- cnv$chr
   start <- cnv$start
   end <- cnv$end
@@ -217,20 +217,47 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
       if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
       if (a$Visual_Output == 3) pt <- paste0(root, '/unk_dup/', a$sample_ID, '_', a$start, '.png')
 
-      dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
-                     w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
+    dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
+                   w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
 
-      dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
+    dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
+    imager::save.image(imager::as.cimg(dt), pt)
+
+    # Data agumentation 1, image flipping
+    if (runif(1) >= flip_chance) {
+      dt[, x := abs(x-(max(x)+1))] # flip the x axis
+      pt <- gsub('\\.png', '_flip\\.png', pt)
       imager::save.image(imager::as.cimg(dt), pt)
+    }
+  }
 
-      # Data agumentation 1, image flipping
-      if (runif(1) >= flip_chance) {
-        dt[, x := abs(x-(max(x)+1))] # flip the x axis
-        pt <- gsub('\\.png', '_flip\\.png', pt)
-        imager::save.image(imager::as.cimg(dt), pt)
-      }
+  # save images using BiocParallel
+  null <- bplapply(1:nrow(cnvs), FUN)
+
+}
+
+### --- ### --- ###
+
+save_pngs_testset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
+                              shrink_lrr = 0.2) {
+  if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a dfferent path')
+
+  dir.create(root)
+
+  FUN <- function(x) {
+    a <- cnvs[x]
+
+    pt <- paste0(root, '/', a$sample_ID, '_', a$start, '.png')
+
+    # test tabix file
+    dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
+                   w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
+
+    dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
+    imager::save.image(imager::as.cimg(dt), pt)
   }
 
   null <- bplapply(1:nrow(cnvs), FUN)
 
 }
+
