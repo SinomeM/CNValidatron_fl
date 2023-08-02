@@ -109,6 +109,9 @@ convnet_dropout <- nn_module(
       nn_linear(npx*16, npx*16),
       nn_relu(),
       nn_dropout(p = 0.05),
+      nn_linear(npx*16, npx*16),
+      nn_relu(),
+      nn_dropout(p = 0.05),
       nn_linear(npx*16, classes)
     )
   },
@@ -135,7 +138,7 @@ rates_and_losses_do %>% plot() # REMEMBER TO CHECK AND UPDATE max_lr !!!!!
 fitted_dropout <- model %>%
   fit(train_dl, epochs = 50, valid_data = valid_dl,
       callbacks = list(
-        luz_callback_early_stopping(patience = 3),
+        luz_callback_early_stopping(patience = 2),
         luz_callback_lr_scheduler(
           lr_one_cycle,
           max_lr = 0.01,
@@ -225,13 +228,47 @@ test_dt <- readRDS('tmp/test_dt.rds')
 uneval_dataset <- image_folder_dataset(
   'tmp/unvalidated/', transform = . %>% transform_to_tensor())
 fitted_model
-uneval_pred <- torch_sigmoid(predict(fitted_model, uneval_dataset))
-tmp <- predict(fitted_model, uneval_dataset)
+# the output is raw logits
+uneval_pred <- predict(fitted_model, uneval_dataset)
+# convert to probabilities
+uneval_pred <- 1 / (1 + exp(-uneval_pred))
 
-dt <- data.table(ix = 1:nrow(uneval_pred),
-                 class1 = as.numeric(uneval_pred[,1]),
-                 class2 = as.numeric(uneval_pred[,2]),
-                 class3 = as.numeric(uneval_pred[,3]),
-                 class4 = as.numeric(uneval_pred[,4]),
-                 class5 = as.numeric(uneval_pred[,5]))
-dt
+
+# the classes are
+# false:   1
+# tru_del: 2
+# tru_dup: 3
+# unk_del: 4
+# unk_dup: 5
+
+
+dt <- data.table(ix = uneval_dataset$samples[[1]],
+                 class1 = round(as.numeric(uneval_pred[,1]), 5),
+                 class2 = round(as.numeric(uneval_pred[,2]), 5),
+                 class3 = round(as.numeric(uneval_pred[,3]), 5),
+                 class4 = round(as.numeric(uneval_pred[,4]), 5),
+                 class5 = round(as.numeric(uneval_pred[,5]), 5))
+
+for (i in 1:nrow(dt))
+  dt[i, pred := which.max(c(class1, class2, class3, class4, class5))]
+
+dt[, sample_ID := gsub('/home/simone/Documents/CNValidatron_fl/tmp/unvalidated/tmp/', '', ix)]
+dt[, start := gsub('\\d+_', '', sample_ID)][, start := as.integer(gsub('.png', '', start))]
+dt[, sample_ID := as.integer(gsub('_\\w+.png', '', sample_ID))]
+dt[, ix := NULL]
+
+
+dt[, locus := paste0('locus', 1:nrow(dt))]
+dt <- merge(dt, cnvs[, .(sample_ID, chr, start, end, numsnp,
+                         length, type, conf, batch, GT, CN)],
+            by = c('sample_ID', 'start'))
+loci <- cnvs[, .(locus, chr, start, end)]
+
+fwrite(loci, '../UKB_data/visual_inspection3/loci.txt', sep = '\t')
+fwrite(loci[, .(locus)], '../UKB_data/visual_inspection3/loci_Sel.txt', col.names = F)
+for (i in 1:5)
+  fwrite(
+    dt[pred == i, ][, .(sample_ID, chr, start, end, GT, CN, numsnp,
+                        length, type, conf, locus, batch, pred)],
+    paste0('../UKB_data/visual_inspection3/putative', i, '.txt'), sep = '\t')
+
