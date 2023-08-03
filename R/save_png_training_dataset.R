@@ -1,3 +1,20 @@
+#' Create Dataset of Validated CNVs
+#'
+#' This function is used to create the dataset of PNG images for training.
+#' At the moment not all options for plot_cnv() are available here.
+#'
+#' @param root root folder for the dataset. Must not exists.
+#' @param cnvs cnv data.table in the usual format
+#' @param samps sample list in usual format
+#' @param snps snps in the usual format
+#' @param w see plot_cnv()
+#' @param in_out_ratio see load_snps_tbx()
+#' @param shrink_lrr see load_snps_tbx()
+#' @param flip_chance probability of saving a flipped example as well
+#'
+#' @export
+#'
+#' @import data.table
 
 save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
                               shrink_lrr = 0.2, flip_chance = 0.5) {
@@ -48,7 +65,7 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
   }
 
   # save images using BiocParallel
-  null <- bplapply(1:nrow(cnvs), FUN)
+  null <- BiocParallel::bplapply(1:nrow(cnvs), FUN)
 
 }
 

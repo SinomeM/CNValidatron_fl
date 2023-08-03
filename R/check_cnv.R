@@ -1,3 +1,19 @@
+#' Plot LRR/BAF for a given CNV
+#'
+#' This function is mostly needed for developing to check how CNVs looks like
+#' "normally" and compare with the PNG form.
+#'
+#' @param cnv see load_snps_tbx() documentation
+#' @param samp see load_snps_tbx() documentation
+#' @param snps see load_snps_tbx() documentation
+#' @param in_out_ratio see load_snps_tbx() documentation
+#' @param adjusted_lrr see load_snps_tbx() documentation
+#' @param min_lrr see load_snps_tbx() documentation
+#' @param max_lrr see load_snps_tbx() documentation
+#' @param shrink_lrr see load_snps_tbx() documentation
+#'
+#' @import data.table
+#' @import ggplot2
 
 check_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
                       min_lrr = -1.2, max_lrr = 1, shrink_lrr = NULL) {

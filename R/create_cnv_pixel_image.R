@@ -1,3 +1,28 @@
+#' Create the matrix for the PNG image
+#'
+#' This function create the pixel matrix that can be saved
+#' as a PNG for further use. All processing is done in the
+#' function load_snps_tbx().
+#'
+#' @param cnv see load_snps_tbx() documentation
+#' @param samp see load_snps_tbx() documentation
+#' @param snps see load_snps_tbx() documentation
+#' @param in_out_ratio see load_snps_tbx() documentation
+#' @param adjusted_lrr see load_snps_tbx() documentation
+#' @param min_lrr see load_snps_tbx() documentation
+#' @param max_lrr see load_snps_tbx() documentation
+#' @param shrink_lrr see load_snps_tbx() documentation
+#' @param w size of square side in pixel
+#' @param z_ratio approximate ratio of z (the blank section between
+#'        the two halves) compared to w
+#' @param tmp_plot for developing, if set to 1 plot the "normal"
+#'        LRR/BAF plot, if set to 2 plot the pixelated image in R
+#'
+#' @export
+#'
+#' @import data.table
+#' @import ggplot2
+
 
 plot_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
                      w = 64, z_ratio = 0.1, tmp_plot = 0, min_lrr = -1.2, max_lrr = 1,

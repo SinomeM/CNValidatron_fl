@@ -1,3 +1,7 @@
+require(luz)
+require(torch)
+require(torchvision)
+
 
 convnet_dropout <- nn_module(
   "convnet",

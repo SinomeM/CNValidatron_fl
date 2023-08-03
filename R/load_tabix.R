@@ -1,12 +1,22 @@
+#' Load intensity data in R from tabix file
+#'
+#' A function to lead the snps data from the tabix indexed intensity file.
+#' It will also perform some preprocessing, e.g. reduce the LRR interval to [-1.4 , 1.2],
+#'
+#' @param cnv one line data.table in the usual cnv format
+#' @param samp one line samples file in the usual format
+#' @param snps the snps file for PennCNV, as data.table
+#' @param in_out_ratio ratio of bp outside the cnv vs inside, per side. A value of one means
+#'        the CNV length will be added on each side
+#' @param adjusted_lrr 
+#' @param min_lrr
+#' @param max_lrr
+#' @param shrink_lrr
+#'
+#' @export
+#'
+#' @import data.table
 
-# A function to lead the snps data from the tabix indexed intensity file.
-# It will also perform some preprocessing, e.g. reduce the LRR interval to [-1.4 , 1.2],
-
-# @param cnv one line data.table in the usual cnv format
-# @param samp one line samples file in the usual format
-# @param snps the snps file for PennCNV, as data.table
-# @param in_out_ratio ratio of bp otside the cnv vs inside, per side. A value of one means
-#        the cnv length will be addded on each side
 
 load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
                           min_lrr = -1.2, max_lrr = 1, shrink_lrr = NULL) {
