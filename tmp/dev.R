@@ -14,9 +14,43 @@ devtools::build()
 devtools::install()
 
 
+# In this file there is most of the development process
+# Lower chunks are older
+
+
 # --------------------------------------------------------------------------- #
 
 ## TRAIN the model on all examples ##
+
+if (T) {
+  setwd('~/Documents/CNValidatron_fl')
+  library(data.table)
+  devtools::load_all()
+  source('./R/.cnn_model.R')
+  options(MulticoreParam = MulticoreParam(workers = 12))
+
+  # Load CNV and samples table from UKB export
+  cnvs <- fread('~/Documents/UKB_data/edited/cvns.txt')
+  samples <- fread('~/Documents/UKB_data/edited/samples.txt')
+  snps <- fread('~/Documents/UKB_data/snppos_filtered.txt')
+  # load visual validations
+  tmp <- list.files('~/Documents/UKB_data/visual_inspection2/')
+  tmp <- tmp[grep('visual', tmp)]
+  vi_cnv <- data.table()
+  for (i in tmp)
+    vi_cnv <- rbind(
+      vi_cnv,fread(paste0('~/Documents/UKB_data/visual_inspection2/', i)))
+  vi_cnv <- vi_cnv[numsnp > 40]
+  # load visual validations 2
+  tmp <- list.files('~/Documents/UKB_data/visual_inspection3/')
+  tmp <- tmp[grep('visual', tmp)]
+  vi_cnv2 <- data.table()
+  for (i in tmp)
+    vi_cnv2 <- rbind(
+      vi_cnv2, fread(paste0('~/Documents/UKB_data/visual_inspection3/', i)))
+}
+vi_cnv
+vi_cnv2
 
 
 
