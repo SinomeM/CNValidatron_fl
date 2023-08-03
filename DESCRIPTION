@@ -7,4 +7,12 @@ Authors@R:
 Description: What the package does (one paragraph).
 License: `use_gpl3_license()`
 Encoding: UTF-8
+Imports:
+    data.table,
+    ggplot2
+Depends:
+    BiocParallel,
+    torch,
+    torchvision,
+    luz
 RoxygenNote: 7.2.3

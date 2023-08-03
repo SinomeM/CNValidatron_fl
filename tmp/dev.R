@@ -15,6 +15,115 @@ devtools::install()
 
 
 # --------------------------------------------------------------------------- #
+
+## TRAIN the model on all examples ##
+
+
+
+
+# --------------------------------------------------------------------------- #
+
+## TRAIN THE MODEL 1 ##
+# 5000 examples (just a fraction are >40 SNPS)
+if (T) {
+  setwd('~/Documents/CNValidatron_fl')
+  library(data.table)
+  devtools::load_all()
+  source('./R/.cnn_model.R')
+  options(MulticoreParam = MulticoreParam(workers = 12))
+
+  # Load CNV and samples table from UKB export
+  samples <- fread('~/Documents/UKB_data/edited/samples.txt')
+  snps <- fread('~/Documents/UKB_data/snppos_filtered.txt')
+  # load visual validations
+  tmp <- list.files('~/Documents/UKB_data/visual_inspection2/')
+  tmp <- tmp[grep('visual', tmp)]
+  vi_cnv <- data.table()
+  for (i in tmp)
+    vi_cnv <- rbind(
+      vi_cnv,fread(paste0('~/Documents/UKB_data/visual_inspection2/', i)))
+}
+
+# only larger CNVs for now
+tmp <- vi_cnv[numsnp > 40 & Visual_Output %in% 1:3, ]
+train_test <- tmp[sample(1:nrow(tmp), round(nrow(tmp)*0.80) )]
+valid_test <- fsetdiff(tmp, train_test)
+
+# class imbalance?
+train_test[, .N, by = c('Visual_Output', 'GT')]
+valid_test[, .N, by = c('Visual_Output', 'GT')]
+# there is some class imbalance, however this is due to the true distribution
+# of CNV calls produced by PennCNV so in a way it should be this way (?)
+
+# save plots
+npx = 64
+if (F) {
+  # minsnp 40, default
+  train_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/min40snps/train'
+  valid_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/min40snps/valid'
+  save_pngs_dataset(train_pt, train_test, samples, snps, w = npx, flip_chance = 0.7)
+  save_pngs_dataset(valid_pt, valid_test, samples, snps, w = npx, flip_chance = 0.7)
+}
+
+if (F) {
+  # minsnp 35 or lower
+  tmp <- vi_cnv[numsnp > 35 & Visual_Output %in% 1:3, ]
+  train_test <- tmp[sample(1:nrow(tmp), round(nrow(tmp)*0.75) )]
+  valid_test <- fsetdiff(tmp, train_test)
+  train_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/min35snps/train'
+  valid_pt <- '/home/simone/Documents/CNValidatron_fl/tmp/min35snps/valid'
+  save_pngs_dataset(train_pt, train_test, samples, snps, w = npx, flip_chance = 0.7)
+  save_pngs_dataset(valid_pt, valid_test, samples, snps, w = npx, flip_chance = 0.7)
+}
+
+# training and validation dataloaders
+bs <- 64
+train_dl <- dataloader(torchvision::image_folder_dataset(
+                         train_pt, transform = . %>% transform_to_tensor()),
+                       batch_size = bs, shuffle = TRUE)
+valid_dl <- dataloader(torchvision::image_folder_dataset(
+                         valid_pt, transform = . %>% transform_to_tensor()),
+                       batch_size = bs, shuffle = TRUE)
+
+npx
+classes <- 5 # T del/dup, U del/dup, F
+
+# learning rate finder
+model <- convnet_dropout %>%
+  setup(
+    loss = nn_cross_entropy_loss(),
+    optimizer = optim_adam,
+    metrics = list(
+      luz_metric_accuracy()
+    )
+  )
+rates_and_losses_do <- model %>% lr_finder(train_dl, end_lr = 0.3)
+rates_and_losses_do %>% plot() # REMEMBER TO CHECK AND UPDATE max_lr !!!!!
+
+# fit
+fitted_dropout <- model %>%
+  fit(train_dl, epochs = 50, valid_data = valid_dl,
+      callbacks = list(
+        luz_callback_early_stopping(patience = 2),
+        luz_callback_lr_scheduler(
+          lr_one_cycle,
+          max_lr = 0.01,
+          epochs = 50,
+          steps_per_epoch = length(train_dl),
+          call_on = "on_batch_end"),
+        luz_callback_model_checkpoint(path = "cpt_dropout/"),
+        luz_callback_csv_logger("logs_dropout.csv")
+        ),
+      verbose = TRUE)
+
+# save the preliminary fitted model
+luz_save(fitted_dropout, 'tmp/fitted_dropout_2k.rds')
+
+
+
+# --------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- #
 # Design process (kept for now, but can be deleted for the most part)
 
 ## (RE)START FROM SCRATCH THE DESIGN ##
