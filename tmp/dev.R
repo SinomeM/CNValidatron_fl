@@ -18,6 +18,16 @@ devtools::install()
 # Lower chunks are older
 
 
+# pseudocode
+pred_pt <- 'path/to/pt'
+cnvs
+samples
+snps
+save_pngs_prediction(pred_pt, cnvs, samples, snps, w = 64)
+make_prediciton(model, pred_pt, cnvs)
+
+
+
 # --------------------------------------------------------------------------- #
 
 ## TRAIN THE MODEL 1 ##
