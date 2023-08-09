@@ -4,7 +4,7 @@
 #' At the moment not all options for plot_cnv() are available here.
 #'
 #' @param root root folder for the dataset. Must not exists.
-#' @param cnvs cnv data.table in the usual format
+#' @param cnvs cnv data.table in the usual format plus the columns 'Visual_Output'
 #' @param samps sample list in usual format
 #' @param snps snps in the usual format
 #' @param w see plot_cnv()
@@ -21,18 +21,12 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
   if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a different path')
 
   dir.create(root)
-  if(5 %in% cnvs$Visual_Output) dir.create(paste0(root, '/not_eval'))
-  else {
-    dir.create(paste0(root, '/true_del')); dir.create(paste0(root, '/true_dup'))
-    dir.create(paste0(root, '/unk_dup')); dir.create(paste0(root, '/unk_del'))
-    dir.create(paste0(root, '/false'))
-  }
-
+  dir.create(paste0(root, '/true_del')); dir.create(paste0(root, '/true_dup'))
+  dir.create(paste0(root, '/unk_dup')); dir.create(paste0(root, '/unk_del'))
+  dir.create(paste0(root, '/false'))
 
   FUN <- function(x) {
     a <- cnvs[x]
-
-    if (a$Visual_Output == 5) pt <- paste0(root, '/not_eval/', a$sample_ID, '_', a$start, '.png')
 
     if (a$GT == 1) {
       if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/', a$sample_ID, '_', a$start, '.png')
@@ -54,6 +48,7 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
     }
 
     dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
+
     imager::save.image(imager::as.cimg(dt), pt)
 
     # Data augmentation 1, image flipping
