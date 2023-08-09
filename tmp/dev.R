@@ -19,13 +19,19 @@ devtools::install()
 
 
 # pseudocode
-pred_pt <- 'path/to/pt'
-cnvs
-samples
-snps
+setwd('~/Documents/CNValidatron_fl')
+library(data.table)
+pred_pt <- '~/Documents/CNValidatron_fl/tmp/prediction'
+cnvs <- fread('~/Documents/CNValidatron_trained_models/all_visual_inspection_min40snps.txt')[1:100]
+samples <- fread('~/Documents/UKB_data/edited/samples.txt')
+snps <- fread('~/Documents/UKB_data/snppos_filtered.txt')
 save_pngs_prediction(pred_pt, cnvs, samples, snps, w = 64)
-make_prediciton(model, pred_pt, cnvs)
 
+devtools::load_all()
+prediction <- make_predicitons(
+  luz::luz_load('~/Documents/CNValidatron_trained_models/fitted_dropout_all.rds'),
+  pred_pt, cnvs)
+prediction[1:10]
 
 
 # --------------------------------------------------------------------------- #

@@ -18,7 +18,7 @@ save_pngs_dataset(
 \arguments{
 \item{root}{root folder for the dataset. Must not exists.}
 
-\item{cnvs}{cnv data.table in the usual format}
+\item{cnvs}{cnv data.table in the usual format plus the columns 'Visual_Output'}
 
 \item{samps}{sample list in usual format}
 
