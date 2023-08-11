@@ -48,7 +48,7 @@ make_predicitons <- function(model, root, cnvs) {
             ix := NULL]
 
   pred_dt <- merge(pred_dt, cnvs[, .(sample_ID, chr, start, end, numsnp,
-                                length, type, conf, batch, GT, CN)],
+                                length, conf, GT, CN)],
                    by = c('sample_ID', 'start'))
 
 }
