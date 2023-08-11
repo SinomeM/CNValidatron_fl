@@ -41,7 +41,7 @@ load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr
   if (ncol(dt) == 7) colnames(dt) <- c("chr", "position", "end", "LRR", "LRRadj", "BAF", "snp")
   else {
     if (adjusted_lrr) colnames(dt) <- c("chr", "position", "end", "LRR", "BAF", "LRRadj")
-    if colnames(dt) <- c("chr", "position", "end", "LRR", "BAF")
+    else colnames(dt) <- c("chr", "position", "end", "LRR", "BAF")
   }
 
   if (!is.null(snps)) dt <- dt[paste0(chr, position) %in% snps[, paste0(Chr, Position)], ]
