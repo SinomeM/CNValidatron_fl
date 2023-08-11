@@ -14,5 +14,6 @@ Depends:
     BiocParallel,
     torch,
     torchvision,
-    luz
+    luz,
+    imager
 RoxygenNote: 7.2.3
