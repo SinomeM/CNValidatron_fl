@@ -4,7 +4,7 @@
 #' At the moment not all options for plot_cnv() are available here.
 #'
 #' @param root root folder for the dataset. Must not exists.
-#' @param cnvs cnv data.table in the usual format plus the columns 'Visual_Output'
+#' @param cnvs cnv data.table in the usual format plus the column 'Visual_Output'
 #' @param samps sample list in usual format
 #' @param snps snps in the usual format
 #' @param w see plot_cnv()
@@ -17,7 +17,8 @@
 #' @import data.table
 
 save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
-                              shrink_lrr = 0.2, flip_chance = 0.5) {
+                              shrink_lrr = 0.2, flip_chance = 0.5,
+                              hole_chance = 0.2, noise_chance = 0.15, noise_lvl = 0.1) {
   if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a different path')
 
   dir.create(root)
@@ -29,14 +30,20 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
     a <- cnvs[x]
 
     if (a$GT == 1) {
-      if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/', a$sample_ID, '_', a$start, '.png')
-      if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
-      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_del/', a$sample_ID, '_', a$start, '.png')
+      if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/', a$sample_ID,
+                                             '_', a$start, '.png')
+      if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID,
+                                             '_', a$start, '.png')
+      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_del/', a$sample_ID,
+                                             '_', a$start, '.png')
     }
     if (a$GT == 2) {
-      if (a$Visual_Output == 1) pt <- paste0(root, '/true_dup/', a$sample_ID, '_', a$start, '.png')
-      if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID, '_', a$start, '.png')
-      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_dup/', a$sample_ID, '_', a$start, '.png')
+      if (a$Visual_Output == 1) pt <- paste0(root, '/true_dup/', a$sample_ID,
+                                             '_', a$start, '.png')
+      if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID,
+                                             '_', a$start, '.png')
+      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_dup/', a$sample_ID,
+                                             '_', a$start, '.png')
     }
 
     dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
@@ -45,6 +52,16 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
     if (nrow(dt) == 0) {
       warning('no image saved for cnv: ', a)
       return(data.table())
+    }
+
+    if (runif(1) <= noise_chance) {
+      nm <- matrix(rnorm(w*w, sd = 0.3) * noise_lvl, nrow = w)
+      dt <- dt + nm
+
+      # create a w*w matrix of random numbers between -1 and 1 and scale them by
+      # noise_lvl
+      # Add the two matrices together and renormalise between 0 an 1
+      ## !!!
     }
 
     dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
@@ -56,6 +73,11 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
       dt[, x := abs(x-(max(x)+1))] # flip the x axis
       pt <- gsub('\\.png', '_flip\\.png', pt)
       imager::save.image(imager::as.cimg(dt), pt)
+    }
+
+    if (runif(1) <= hole_chance) {
+      # see issue on github
+      ## !!!
     }
   }
 
