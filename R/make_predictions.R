@@ -44,8 +44,6 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F) {
   colnames(pred_probs) <- paste0('prob', 1:5)
   pred_dt <- cbind(pred_dt, pred_probs)
 
-  return(pred_dt)
-
   pred_dt[, sample_ID := gsub('.+new/', '', ix)][,
             start := gsub('\\d+_', '', sample_ID)][,
             start := as.integer(gsub('.png', '', start))][,
