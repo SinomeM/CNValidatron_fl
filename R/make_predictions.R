@@ -41,7 +41,7 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F) {
     pred_dt[i, pred_prob := pred_probs[i, pred_ix[i]]]
 
   pred_probs <- as.data.table(pred_probs)
-  colnames(pred_probs) <- paste0('prob', 1:5)
+  colnames(pred_probs) <- c('p_false', 'p_true_del', 'p_true_dup', 'pred_unk_del', 'p_unk_dup')
   pred_dt <- cbind(pred_dt, pred_probs)
 
   pred_dt[, sample_ID := gsub('.+new/', '', ix)][,
