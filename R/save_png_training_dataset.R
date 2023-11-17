@@ -54,16 +54,6 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
       return(data.table())
     }
 
-    if (runif(1) <= noise_chance) {
-      nm <- matrix(rnorm(w*w, sd = 0.3) * noise_lvl, nrow = w)
-      dt <- dt + nm
-
-      # create a w*w matrix of random numbers between -1 and 1 and scale them by
-      # noise_lvl
-      # Add the two matrices together and renormalise between 0 an 1
-      ## !!!
-    }
-
     dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
 
     imager::save.image(imager::as.cimg(dt), pt)
@@ -72,6 +62,13 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
     if (runif(1) <= flip_chance) {
       dt[, x := abs(x-(max(x)+1))] # flip the x axis
       pt <- gsub('\\.png', '_flip\\.png', pt)
+      imager::save.image(imager::as.cimg(dt), pt)
+    }
+
+    if (runif(1) <= noise_chance) {
+      nm <- matrix(rnorm(w*w, sd = 0.3) * noise_lvl, nrow = w)
+      dt <- dt + nm
+      pt <- gsub('\\.png', '_noised\\.png', pt)
       imager::save.image(imager::as.cimg(dt), pt)
     }
 
