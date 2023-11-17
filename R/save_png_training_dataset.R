@@ -62,16 +62,17 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
     if (runif(1) <= flip_chance) {
       dt[, x := abs(x-(max(x)+1))] # flip the x axis
       pt <- gsub('\\.png', '_flip\\.png', pt)
-      imager::save.image(imager::as.cimg(dt), pt)
-    }
 
     # Data augmentation 2, add some random noise
     if (runif(1) <= noise_chance) {
       nv <- rnorm(w*w, sd = 0.3) * noise_lvl
       dt[, value := value + nv]
       pt <- gsub('\\.png', '_noised\\.png', pt)
+    }
+
       imager::save.image(imager::as.cimg(dt), pt)
     }
+
 
     if (runif(1) <= hole_chance) {
       # see issue on github
