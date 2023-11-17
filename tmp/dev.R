@@ -28,3 +28,10 @@ pred <- make_predictions(luz::luz_load('~/Documents/CNValidatron_trained_models/
                          pt, cnvs)
 pred
 
+
+library(data.table)
+samps <- fread('~/Documents/CNValidatron_trained_models/second_iteration/all_samples_15k.txt')
+cnvs <- fread('~/Documents/CNValidatron_trained_models/second_iteration/all_training_example_8k.txt')
+a <- cnvs[1]
+b <- samps[sample_ID == a$sample_ID, ]
+plot_cnv(a, b)

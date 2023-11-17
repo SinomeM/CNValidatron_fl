@@ -38,6 +38,12 @@ convnet_dropout <- nn_module(
       nn_linear(npx*16, npx*16),
       nn_relu(),
       nn_dropout(p = 0.05),
+      nn_linear(npx*16, npx*16),
+      nn_relu(),
+      nn_dropout(p = 0.05),
+      nn_linear(npx*16, npx*16),
+      nn_relu(),
+      nn_dropout(p = 0.05),
       nn_linear(npx*16, classes)
     )
   },
