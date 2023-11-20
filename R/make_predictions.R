@@ -43,6 +43,8 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F) {
   pred_probs <- as.data.table(pred_probs)
   colnames(pred_probs) <- c('p_false', 'p_true_del', 'p_true_dup', 'pred_unk_del', 'p_unk_dup')
   pred_dt <- cbind(pred_dt, pred_probs)
+  
+  return(pred_dt)
 
   pred_dt[, sample_ID := gsub('.+new/', '', ix)][,
             start := gsub('\\d+_', '', sample_ID)][,
