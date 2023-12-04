@@ -39,6 +39,7 @@ iou_matrix <- function(cnvs, chr_arms) {
 
     # output object is going to be a list
     out_list[[i]] <- dt_s[, .(cnvA, cnvB, iou, stA, stB, enA, enB)]
+    gc()
   }
   names(out_list) <- chr_arms$arm_ID
   return(out_list)
