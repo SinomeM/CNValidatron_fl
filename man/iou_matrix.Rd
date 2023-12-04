@@ -4,9 +4,13 @@
 \alias{iou_matrix}
 \title{Compute the Intersection Over the Union for a set of CNVs}
 \usage{
-iou_matrix(cnvs, chr_arms)
+iou_matrix(cnvs, chr_arms, min_iou = 0)
 }
 \arguments{
+\item{chr_arms}{chromsome arms location, from `QCtreeCNV` package}
+
+\item{min_iou}{minimum IOU filter, useful to reduce output size if it will be used for CNVRs. Leave to 0 for plotting and exploration}
+
 \item{cnv}{usual CNVs `data.table`}
 }
 \description{

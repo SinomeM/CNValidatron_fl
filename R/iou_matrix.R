@@ -4,12 +4,14 @@
 #' construct CNVRs.
 #'
 #' @param cnv usual CNVs `data.table`
+#' @param chr_arms chromsome arms location, from `QCtreeCNV` package
+#' @param min_iou minimum IOU filter, useful to reduce output size if it will be used for CNVRs. Leave to 0 for plotting and exploration
 #'
 #' @import data.table
 #'
 #' @export
 
-iou_matrix <- function(cnvs, chr_arms) {
+iou_matrix <- function(cnvs, chr_arms, min_iou = 0) {
 
   # index on center position
   dt_all <- copy(cnvs)
@@ -35,6 +37,7 @@ iou_matrix <- function(cnvs, chr_arms) {
 
     dt_s[, iou := (pmin(enA, enB) - pmax(stA, stB)) /
                   (pmax(enA, enB) - pmin(stA, stB))]
+    if (min_iou > 0) dt_s <- dt_s[iou >= min_iou, ]
     setorder(dt_s, cnvA)
 
     # output object is going to be a list
