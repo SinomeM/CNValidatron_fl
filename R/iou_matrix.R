@@ -9,7 +9,6 @@
 #'
 #' @import data.table
 #'
-#' @export
 
 iou_matrix <- function(cnvs, chr_arms, min_iou = 0) {
 
