@@ -10,7 +10,8 @@ cnvrs_iou(
   window_size = 5e+05,
   min_iou = 0.75,
   leiden_res = 1,
-  plots_path = NA
+  plots_path = NA,
+  min_n = 10
 )
 }
 \arguments{
