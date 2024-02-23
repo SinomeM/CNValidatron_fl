@@ -66,10 +66,11 @@ cnvrs_iou <- function(cnvs, chr_arm, window_size = 500000, min_iou = 0.75,
       while(n1 < n) {
         # TO BE TESTED !!!!
         n <- nrow(dt_r)
-        out <- merge_cnvrs(dt, dt_r, min_iou)
+        out <- merge_cnvrs(dt_r, dt, min_iou)
         dt <- out[[1]]
         dt_r <- out[[2]]
         n1 <- nrow(dt_r)
+        if(n1 < n) message('merged some CNVRs')
       }
 
       # update the output tables
@@ -148,10 +149,11 @@ create_cnvrs <- function(dt) {
 # TO BE TESTED!!!!
 merge_cnvrs <- function(cnvrs, cnvs, min_iou) {
   # initialise while
-  continue == T; i <- 1; max <- nrow(cnvr)
-  while(continue) {
-    # select one random cnvr
-    a <- cnvrs[sample(1)]
+  continue <- T; i <- 0; max <- round(nrow(cnvrs)/5)
+  cnvrs[, len := end - start]
+  while(i <= max) {
+    # select one random cnvr, from the largest half
+    a <- cnvrs[len >= cnvrs[, mean(len)/2], ][sample(1)]
     len <- a[, end - start + 1]
     # check if there is any other CNVR with iou >= min_iou
     cnvrs[, iou := (pmin(a$end, end) - pmax(a$start, start)) /
@@ -163,11 +165,10 @@ merge_cnvrs <- function(cnvrs, cnvs, min_iou) {
       c <- fsetdiff(cnvrs, b)
       b[1][, ':=' (start = min(start), end = max(end), n = sum(n))]
       cnvs[CNVR %chin% b$CNVR, CNVR := b[1, CNVR], ]
+      cnvrs <- rbind(c, b[1])
     }
 
-    # exit the while after a certain number of loops
-    if (i > max) break
-    i <- 1 + 1
+    i <- i + 1
   }
   return(list(cnvs, cnvrs))
 }
