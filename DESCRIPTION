@@ -15,5 +15,6 @@ Depends:
     torch,
     torchvision,
     luz,
-    imager
+    imager,
+    igraph
 RoxygenNote: 7.2.3

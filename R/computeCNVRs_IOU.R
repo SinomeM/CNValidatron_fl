@@ -5,11 +5,13 @@
 #' each pairs of CNVs is considered as two connected nodes. The CNVRs are
 #' computed using community the detection algorithm 'leiden'
 #'
-#' @param cnv usual CNVs `data.table`
+#' @param cnvs usual CNVs `data.table`
 #' @param chr_arms chromsome arms location, from `QCtreeCNV` package
+#' @param window_size minimum size of individual networks search
 #' @param min_iou minimum IOU filter. Define how similar two CNVs must be in order to be considered connected
 #' @param leiden_res lower value will tend to create more smaller communities
 #' @param plot_path not yet implemented
+#' @param min_n min n for recomputing CNVRs
 #'
 #' @import data.table
 #' @import igraph

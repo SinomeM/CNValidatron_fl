@@ -15,11 +15,15 @@ cnvrs_iou(
 )
 }
 \arguments{
+\item{cnvs}{usual CNVs `data.table`}
+
+\item{window_size}{minimum size of individual networks search}
+
 \item{min_iou}{minimum IOU filter. Define how similar two CNVs must be in order to be considered connected}
 
 \item{leiden_res}{lower value will tend to create more smaller communities}
 
-\item{cnv}{usual CNVs `data.table`}
+\item{min_n}{min n for recomputing CNVRs}
 
 \item{chr_arms}{chromsome arms location, from `QCtreeCNV` package}
 
