@@ -42,7 +42,7 @@ binned_genome <- function(chrs_sten = QCtreeCNV::hg19_start_end_centromeres,
   dt <- data.table()
   for (i in chrs_sten[chr %in% chrs, unique(chr)]) {
     lims <- chrs_sten[chr == i, c(start, end)]
-    n <- round((lims[2] - lims[1] + 1) / bin_size) + 1
+    n <- round((lims[2] - lims[1] + 1) / bin_size)
     tmp <- data.table(ix = 1:n, chr = as.integer(i))
     tmp[, ':=' (start = 0 + (bin_size * (ix-1)), end = bin_size - 1 + (bin_size * (ix-1)))]
     tmp[end > lims[2], end := lims[2]]
