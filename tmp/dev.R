@@ -35,3 +35,13 @@ cnvs <- fread('~/Documents/CNValidatron_trained_models/second_iteration/all_trai
 a <- cnvs[1]
 b <- samps[sample_ID == a$sample_ID, ]
 plot_cnv(a, b)
+
+
+
+a <- QCtreeCNV::hg19_chr_arms[1]
+a
+b <- fread('../../UKB_GW_CNVs/cnvs_with_cnvrs.txt')[chr == 1 & end <= a[, end], ]
+b
+
+dt <- create_splits_foverlaps(b, a)
+dt

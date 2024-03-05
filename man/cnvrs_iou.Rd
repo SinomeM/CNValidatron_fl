@@ -7,7 +7,7 @@
 cnvrs_iou(
   cnvs,
   chr_arm,
-  window_size = 5e+05,
+  screen_size = 500,
   min_iou = 0.75,
   leiden_res = 1,
   plots_path = NA,
@@ -17,7 +17,7 @@ cnvrs_iou(
 \arguments{
 \item{cnvs}{usual CNVs `data.table`}
 
-\item{window_size}{minimum size of individual networks search}
+\item{screen_size}{size of the comb that screen the cnvs to look for individual networks}
 
 \item{min_iou}{minimum IOU filter. Define how similar two CNVs must be in order to be considered connected}
 

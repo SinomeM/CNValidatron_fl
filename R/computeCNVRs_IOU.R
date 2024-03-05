@@ -7,18 +7,18 @@
 #'
 #' @param cnvs usual CNVs `data.table`
 #' @param chr_arms chromsome arms location, from `QCtreeCNV` package
-#' @param window_size minimum size of individual networks search
+#' @param screen_size size of the comb that screen the cnvs to look for individual networks
 #' @param min_iou minimum IOU filter. Define how similar two CNVs must be in order to be considered connected
 #' @param leiden_res lower value will tend to create more smaller communities
 #' @param plot_path not yet implemented
-#' @param min_n min n for recomputing CNVRs
+#' @param min_n min n for recomputing CNVRs (small CNVRs might "drown" in very large networks)
 #'
 #' @import data.table
 #' @import igraph
 #'
 #' @export
 
-cnvrs_iou <- function(cnvs, chr_arm, window_size = 500000, min_iou = 0.75,
+cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
                       leiden_res = 1, plots_path = NA, min_n = 10) {
 
   cnvs[, center := start + (end-start+1)/2]
@@ -33,7 +33,7 @@ cnvrs_iou <- function(cnvs, chr_arm, window_size = 500000, min_iou = 0.75,
 
     if (cnvs_arm[, .N] == 0) next
 
-    splits <- create_splits(cnvs_arm, window_size, cc)
+    splits <- create_splits_foverlaps(cnvs_arm, cc, screen_size)
 
     # now we have a more manageable set of CNVs we can proceed with the IOU matrix and the network analysis
     for (ii in 1:nrow(splits)) {
@@ -64,8 +64,7 @@ cnvrs_iou <- function(cnvs, chr_arm, window_size = 500000, min_iou = 0.75,
 
       dt <- rbind(dt1, dt2); dt_r <- rbind(dt_r1, dt_r2)
       # Check for overlapping CNVRs and merge them
-      n <- 2; n1 <- 1 # initialise the loop
-      while(n1 < n) {
+      while(T) {
         # TO BE TESTED !!!!
         n <- nrow(dt_r)
         out <- merge_cnvrs(dt_r, dt, min_iou)
@@ -73,6 +72,7 @@ cnvrs_iou <- function(cnvs, chr_arm, window_size = 500000, min_iou = 0.75,
         dt_r <- out[[2]]
         n1 <- nrow(dt_r)
         if(n1 < n) message('merged some CNVRs')
+        else break
       }
 
       # update the output tables
@@ -95,6 +95,7 @@ cnvrs_iou <- function(cnvs, chr_arm, window_size = 500000, min_iou = 0.75,
 create_splits <- function(cnvs_arm, window_size, cc) {
   # create the bins
   breaks <- seq(from = cnvs_arm[, min(start)], to = cnvs_arm[, max(end)], by = window_size)
+  breaks[length(breaks)] <- cnvs_arm[, max(end) + 1]
   bins <- data.table(st = breaks[-length(breaks)], en = breaks[-1], ix = 1:(length(breaks)-1))
 
   # count CNVs per bins
@@ -104,6 +105,28 @@ create_splits <- function(cnvs_arm, window_size, cc) {
   # get 0 count bins and create the splits
   sp <- c(cc$start, bins[N == 0, st + (en-st+1)/2], cc$end)
   splits <- data.table(st = sp[-length(sp)], en = sp[-1], ix = 1:(length(sp)-1))
+  message(nrow(splits), ' different possible networks detected in ', nrow(cnvs_arm), ' CNVs')
+
+  return(splits)
+}
+
+create_splits_foverlaps <- function(cnvs_arm, cc, screen_size = 500) {
+
+  # create a sort of "comb" with the teeth at screen_size distance
+  breaks <- seq(from = cc$start, to = cc$end, by = screen_size)
+  bins <- data.table(start = breaks, end = breaks + 1, ix = 1:length(breaks))
+
+  # foverlaps between the comb and the CNVs
+  setkey(cnvs_arm, start, end)
+  dt <- foverlaps(bins, cnvs_arm[, .(start, end)])
+  # the teeth with no match (NA in start and end) can be a split boundary
+  dt <- dt[is.na(start), ]
+  # keep only those were at least one is skipped, meaning the previous did overlap wit a CNV
+  dt[, ixp := c(0, dt$ix[-length(dt$ix)])]
+  splits <- unique(rbind(dt[1, .(i.start, ix)], dt[ixp < ix - 1, .(i.start, ix)], dt[.N, .(i.start, ix)]))
+  colnames(splits) <- c('start', 'ix')
+  # start of of following is the end of previous, this result in .N-1 splits
+  splits <- splits[1:(.N-1),][, end := (splits$start[-1]) - 1]
   message(nrow(splits), ' different possible networks detected in ', nrow(cnvs_arm), ' CNVs')
 
   return(splits)
