@@ -21,7 +21,7 @@
 cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
                       leiden_res = 1, plots_path = NA, min_n = 10) {
 
-  cnvs[, center := start + (end-start+1)/2]
+  cnvs[, center := round(start + (end-start+1)/2)]
   cnvs_with_CNVR <- data.table()
   cnvrs <- data.table()
 
@@ -41,13 +41,15 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       dt <- cnvs_arm[start >= a$st & end <= a$en, ]
       if (nrow(dt) == 0) next
       message('Analysing network ', ii, ', ', nrow(dt), ' CNVs...')
+      ###
+      return(dt)
+      ###
 
       # create igraph object and groups
-      ig <- get_igraph_objs(dt, min_iou, leiden_res)
-      # assign each CNV to a CNVR
-      dt[, CNVR := paste0(cc$arm_ID, '_', ii, '_', membership(ig[[2]]))]
+      ig <- get_igraph_objs(dt, min_iou, leiden_res, ii, cc$arm_ID)
 
       # reconstruct CNVRs
+      dt <- ig[[3]]
       dt_r <- create_cnvrs(dt)
 
       # reprocess all CNVs from CNVRs with n < 10
@@ -57,8 +59,9 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       dt2 <- dt[CNVR %in% dt_r2$CNVR, ]
 
       if (nrow(dt2) > 1) {
-        ig2 <- get_igraph_objs(dt2, min_iou, leiden_res)
-        dt2[, CNVR := paste0(cc$arm_ID, '_', ii, 'small_', membership(ig2[[2]]))]
+        ig2 <- get_igraph_objs(dt2, min_iou, leiden_res, ii, cc$arm_ID, 'small')
+        # dt2[, CNVR := paste0(cc$arm_ID, '_', ii, 'small_', membership(ig2[[2]]))]
+        dt2 <- ig2[[3]]
         dt_r2 <- create_cnvrs(dt2)
       }
 
@@ -79,7 +82,7 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       cnvs_with_CNVR <- rbind(cnvs_with_CNVR, dt)
       cnvrs <- rbind(cnvrs, dt_r)
 
-      if (!is.na(plots_path)) save_igraph_plot(ig[[1]], ig[[2]])
+      if (!is.na(plots_path)) save_igraph_plot(plots_path, ig[[1]], ig[[2]], ii)
       gc()
     }
   }
@@ -132,30 +135,38 @@ create_splits_foverlaps <- function(cnvs_arm, cc, screen_size = 500) {
   return(splits)
 }
 
-get_igraph_objs <- function(dt, min_iou, leiden_res) {
-  setorder(dt, center)
-  dt[, cix := 1:.N]
+get_igraph_objs <- function(dt, min_iou, leiden_res, ii, arm, type = '') {
 
-  # create and fill the similarity matrix in the "long" format
-  dt_s <- as.data.table(expand.grid(dt$cix, dt$cix))
-  dt_s <- merge(dt_s, dt[, .(cix, start, end)], by.x = 'Var1', by.y = 'cix')
-  dt_s <- merge(dt_s, dt[, .(cix, start, end)], by.x = 'Var2', by.y = 'cix')
-  colnames(dt_s) <- c('cnvB', 'cnvA', 'stA', 'enA', 'stB', 'enB')
+  # get all overlapping CNVs
+  setkey(dt, start, end)
+  dt[, cix := 1:.N]
+  dt_s <- foverlaps(dt[, .(cix, start, end)], dt[, .(cix, start, end)])
+  colnames(dt_s) <- c('cnvA', 'stA', 'enA', 'cnvB', 'stB', 'enB')
+  dt_s <- dt_s[cnvA != cnvB, ]
 
   dt_s[, iou := (pmin(enA, enB) - pmax(stA, stB)) /
                 (pmax(enA, enB) - pmin(stA, stB))]
 
-  dt_s <- dt_s[iou >= min_iou, ]
+  dt_r <- dt_s[iou >= min_iou, ]
+  dt_s <- dt_s[iou < min_iou, ]
   setorder(dt_s, cnvA)
 
   # create the igraph network
-  g <- graph_from_data_frame(dt_s[,1:2], directed = F)
+  g <- graph_from_data_frame(dt_s[, .(cnvA, cnvB)], directed = F)
   gr <- cluster_leiden(g, resolution_parameter = leiden_res)
 
-  return(list(g, gr))
+  # merge dt_r and igraph object here, careful, not all CNVs that got in are necessarily in dt_r
+  dt_r[, CNVR := paste0(arm, '_', ii, '_', ifelse(type != '', paste0(type, '_'), ''),
+                        membership(gr))]
+  if (dt_s[, .N] > 0) {
+    dt_s[, CNVR := paste0(arm, '_', ii, '_singleton_', 1:.N)]
+    dt <- rbind(dt_s, dt_r)
+  }
+
+  return(list(g, gr, dt))
 }
 
-save_igraph_plot <- function(g, gr) {
+save_igraph_plot <- function(plots_path, g, gr, ii) {
   colors <- rainbow(max(membership(gr)))
   pl <- plot(g, vertex.color = colors[membership(gr)],
              layout = layout_nicely, vertex.size = 5, vertex.label.cex = 0.3, arrow.mode = 0)

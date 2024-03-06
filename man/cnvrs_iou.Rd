@@ -23,7 +23,7 @@ cnvrs_iou(
 
 \item{leiden_res}{lower value will tend to create more smaller communities}
 
-\item{min_n}{min n for recomputing CNVRs}
+\item{min_n}{min n for recomputing CNVRs (small CNVRs might "drown" in very large networks)}
 
 \item{chr_arms}{chromsome arms location, from `QCtreeCNV` package}
 
