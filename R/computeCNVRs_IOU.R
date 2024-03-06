@@ -65,7 +65,6 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       dt <- rbind(dt1, dt2); dt_r <- rbind(dt_r1, dt_r2)
 
       # Check for overlapping CNVRs and merge them
-      return(list(dt,dt_r))
       out <- merge_cnvrs(dt_r, dt, min_iou, leiden_res, cc$arm_ID, ii)
       dt <- out[[1]]
       dt_r <- out[[2]]
