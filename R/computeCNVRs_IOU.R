@@ -65,16 +65,10 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       dt <- rbind(dt1, dt2); dt_r <- rbind(dt_r1, dt_r2)
 
       # Check for overlapping CNVRs and merge them
-      while(T) {
-        # TO BE TESTED !!!!
-        n <- nrow(dt_r)
-        out <- merge_cnvrs(dt_r, dt, min_iou)
-        dt <- out[[1]]
-        dt_r <- out[[2]]
-        n1 <- nrow(dt_r)
-        if(n1 < n) message('merged some CNVRs')
-        else break
-      }
+      return(list(dt,dt_r))
+      out <- merge_cnvrs(dt_r, dt, min_iou, leiden_res, cc$arm_ID, ii)
+      dt <- out[[1]]
+      dt_r <- out[[2]]
 
       # update the output tables
       cnvs_with_CNVR <- rbind(cnvs_with_CNVR, dt)
@@ -135,7 +129,8 @@ get_igraph_objs <- function(dt, min_iou, leiden_res, ii, arm, type = '') {
   setkey(dt, start, end)
   dt[, cix := 1:.N]
   dt_s <- foverlaps(dt[, .(cix, start, end)], dt[, .(cix, start, end)])
-  colnames(dt_s) <- c('cnvA', 'stA', 'enA', 'cnvB', 'stB', 'enB')
+  setnames(dt_s, c('cix', 'start', 'end', 'i.cix', 'i.start', 'i.end'),
+           c('cnvA', 'stA', 'enA', 'cnvB', 'stB', 'enB'))
   dt_s <- dt_s[cnvA != cnvB, ]
 
   dt_s[, iou := (pmin(enA, enB) - pmax(stA, stB)) /
@@ -184,29 +179,47 @@ create_cnvrs <- function(dt) {
   return(dt_r)
 }
 
-# TO BE TESTED!!!!
-merge_cnvrs <- function(cnvrs, cnvs, min_iou) {
-  # initialise while
-  continue <- T; i <- 0; max <- round(nrow(cnvrs)/5)
-  cnvrs[, len := end - start]
-  while(i <= max) {
-    # select one random cnvr, from the largest half
-    a <- cnvrs[len >= cnvrs[, mean(len)/2], ][sample(1)]
-    len <- a[, end - start + 1]
-    # check if there is any other CNVR with iou >= min_iou
-    cnvrs[, iou := (pmin(a$end, end) - pmax(a$start, start)) /
-                   (pmax(a$end, end) - pmin(a$start, start))]
-    b <- cnvrs[iou >= min_iou, ]
+merge_cnvrs <- function(cnvrs, cnvs, min_iou, leiden_res, arm, ii) {
 
-    if (nrow(b) > 1) {
-      # merge all CNVRs and update relative CNVs
-      c <- fsetdiff(cnvrs, b)
-      b[1][, ':=' (start = min(start), end = max(end), n = sum(n))]
-      cnvs[CNVR %chin% b$CNVR, CNVR := b[1, paste0(CNVR, '_merge')], ]
-      cnvrs <- rbind(c, b[1])
-    }
+  # compute iou between all pairs of overlapping CNVRs
+  setkey(cnvrs, start, end)
+  dt <- foverlaps(cnvrs[, .(start, end, CNVR)], cnvrs[, .(start, end, CNVR)])
+  setnames(dt, c('CNVR', 'start', 'end', 'i.CNVR', 'i.start', 'i.end'),
+           c('cnvrA', 'stA', 'enA', 'cnvrB', 'stB', 'enB'))
+  dt <- dt[cnvrA != cnvrB & !(is.na(stA) | is.na(stB)), ]
+  dt[, iou := (pmin(enA, enB) - pmax(stA, stB)) /
+              (pmax(enA, enB) - pmin(stA, stB))]
 
-    i <- i + 1
-  }
+  if (dt[, .N] == 0) return(list(cnvs, cnvrs))
+
+  message('Merging come CNVRs!')
+
+  # I can treat CNVRs as CNVs and use the same idea of the get_igraph_objs() function
+
+  # cnvrs with connections
+  dt_g <- dt[iou >= min_iou, ]
+  setorder(dt_g, cnvrA)
+  dt_r <- cnvrs[CNVR %in% dt_g[, unique(c(cnvrA, cnvrB))], ]
+  dt_r[, CNVR_old := CNVR]
+  # cnvs without connections
+  dt_m <- cnvrs[!CNVR %in% dt_g[, unique(c(cnvrA, cnvrB))], ]
+
+  # create the igraph network
+  g <- graph_from_data_frame(dt_g[, .(cnvrA, cnvrB)], directed = F)
+  gr <- cluster_leiden(g, resolution_parameter = leiden_res)
+  a <- membership(gr)
+  a <- data.table(CNVR = names(a), gr = a)
+  # re construct the CNVRs table
+  dt_r <- merge(dt_r, a, by = 'CNVR')
+  dt_r[, CNVR := paste0(arm, '_', ii, '_merge_', gr)]
+  dt_r[, gr := NULL]
+
+  # Updated CNVRs info in the CNVs table
+  for (i in dt_r[, unique(CNVR)])
+    cnvs[CNVR %in% dt_r[CNVR == i, CNVR_old], CNVR := i]
+
+  # recreate CNVRs table is from updated CNVs table
+  cnvrs <- create_cnvrs(cnvs)
+
   return(list(cnvs, cnvrs))
 }
