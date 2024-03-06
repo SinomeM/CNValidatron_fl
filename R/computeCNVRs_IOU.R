@@ -19,7 +19,7 @@
 #' @export
 
 cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
-                      leiden_res = 1, plots_path = NA, min_n = 10) {
+                      leiden_res = 1, plots_path = NA, min_n = 20) {
 
   cnvs[, center := round(start + (end-start+1)/2)]
   cnvs_with_CNVR <- data.table()
@@ -41,9 +41,6 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       dt <- cnvs_arm[start >= a$st & end <= a$en, ]
       if (nrow(dt) == 0) next
       message('Analysing network ', ii, ', ', nrow(dt), ' CNVs...')
-      ###
-      return(dt)
-      ###
 
       # create igraph object and groups
       ig <- get_igraph_objs(dt, min_iou, leiden_res, ii, cc$arm_ID)
@@ -66,6 +63,7 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       }
 
       dt <- rbind(dt1, dt2); dt_r <- rbind(dt_r1, dt_r2)
+
       # Check for overlapping CNVRs and merge them
       while(T) {
         # TO BE TESTED !!!!
@@ -86,10 +84,6 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       gc()
     }
   }
-
-
-  # get back the CNVs that are excluded in the CNVRs detection (no connections iou > min_iou)
-  # ... #
 
   return(list(cnvs_with_CNVR, cnvrs))
 }
@@ -147,23 +141,31 @@ get_igraph_objs <- function(dt, min_iou, leiden_res, ii, arm, type = '') {
   dt_s[, iou := (pmin(enA, enB) - pmax(stA, stB)) /
                 (pmax(enA, enB) - pmin(stA, stB))]
 
-  dt_r <- dt_s[iou >= min_iou, ]
-  dt_s <- dt_s[iou < min_iou, ]
-  setorder(dt_s, cnvA)
+  # cnvs with connections
+  dt_g <- dt_s[iou >= min_iou, ]
+  setorder(dt_g, cnvA)
+  dt_r <- dt[cix %in% dt_g[, unique(c(cnvA, cnvB))], ]
+  # cnvs without connections
+  dt_m <- dt[!cix %in% dt_g[, unique(c(cnvA, cnvB))], ]
 
   # create the igraph network
-  g <- graph_from_data_frame(dt_s[, .(cnvA, cnvB)], directed = F)
+  g <- graph_from_data_frame(dt_g[, .(cnvA, cnvB)], directed = F)
   gr <- cluster_leiden(g, resolution_parameter = leiden_res)
+  a <- membership(gr)
+  a <- data.table(cix = as.integer(names(a)), gr = a)
 
   # merge dt_r and igraph object here, careful, not all CNVs that got in are necessarily in dt_r
-  dt_r[, CNVR := paste0(arm, '_', ii, '_', ifelse(type != '', paste0(type, '_'), ''),
-                        membership(gr))]
-  if (dt_s[, .N] > 0) {
-    dt_s[, CNVR := paste0(arm, '_', ii, '_singleton_', 1:.N)]
-    dt <- rbind(dt_s, dt_r)
+  dt_r <- merge(dt_r, a, by = 'cix')
+  dt_r[, CNVR := paste0(arm, '_', ii, '_', ifelse(type != '', paste0(type, '_'), ''), gr)]
+  dt_r[, gr := NULL]
+
+  if (dt_m[, .N] > 0) {
+    dt_m[, CNVR := paste0(arm, '_', ii, '_singleton_', 1:.N)]
+    dt <- rbind(dt_m, dt_r)
+    return(list(g, gr, dt))
   }
 
-  return(list(g, gr, dt))
+  return(list(g, gr, dt_r))
 }
 
 save_igraph_plot <- function(plots_path, g, gr, ii) {
@@ -200,7 +202,7 @@ merge_cnvrs <- function(cnvrs, cnvs, min_iou) {
       # merge all CNVRs and update relative CNVs
       c <- fsetdiff(cnvrs, b)
       b[1][, ':=' (start = min(start), end = max(end), n = sum(n))]
-      cnvs[CNVR %chin% b$CNVR, CNVR := b[1, CNVR], ]
+      cnvs[CNVR %chin% b$CNVR, CNVR := b[1, paste0(CNVR, '_merge')], ]
       cnvrs <- rbind(c, b[1])
     }
 

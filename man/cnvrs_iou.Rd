@@ -11,7 +11,7 @@ cnvrs_iou(
   min_iou = 0.75,
   leiden_res = 1,
   plots_path = NA,
-  min_n = 10
+  min_n = 20
 )
 }
 \arguments{
