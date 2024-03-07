@@ -57,8 +57,7 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       dt2 <- dt[CNVR %in% dt_r2$CNVR, ]
 
       if (nrow(dt2) > 1) {
-        ig2 <- get_igraph_objs(dt2, min_iou, leiden_res, ii, cc$arm_ID, 'small')
-        # dt2[, CNVR := paste0(cc$arm_ID, '_', ii, 'small_', membership(ig2[[2]]))]
+        ig2 <- get_igraph_objs(dt2, min_iou, leiden_res, ii, cc$arm_ID, 'sml')
         dt2 <- ig2[[3]]
         dt_r2 <- create_cnvrs(dt2)
       }
@@ -162,7 +161,7 @@ get_igraph_objs <- function(dt, min_iou, leiden_res, ii, arm, type = '') {
   dt_r[, gr := NULL]
 
   if (dt_m[, .N] > 0) {
-    dt_m[, CNVR := paste0(arm, '_', ii, '_singleton_', 1:.N)]
+    dt_m[, CNVR := paste0(arm, '_', ii, '_sngl_', 1:.N)]
     dt <- rbind(dt_m, dt_r)
     return(list(g, gr, dt))
   }
@@ -218,7 +217,7 @@ merge_cnvrs <- function(cnvrs, cnvs, min_iou, leiden_res, arm, ii) {
   a <- data.table(CNVR = names(a), gr = a)
   # re construct the CNVRs table
   dt_r <- merge(dt_r, a, by = 'CNVR')
-  dt_r[, CNVR := paste0(arm, '_', ii, '_merge_', gr)]
+  dt_r[, CNVR := paste0(arm, '_', ii, '_mrg_', gr)]
   dt_r[, gr := NULL]
 
   # Updated CNVRs info in the CNVs table
@@ -262,7 +261,7 @@ force_cnvr_merge <- function(cnvs, cnvrs) {
       if (b[, .N] == 1) next
 
       # update CNVs of to be merged CNVRs
-      cnvs[CNVR %in% b[, CNVR], CNVR := a[, CNVR]]
+      cnvs[CNVR %in% b[, CNVR], CNVR := a[, paste0(CNVR, '_fmrg')]]
     }
   }
 
