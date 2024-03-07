@@ -19,7 +19,8 @@
 #' @export
 
 cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
-                      leiden_res = 1, plots_path = NA, min_n = 20) {
+                      leiden_res = 1, plots_path = NA, min_n = 20,
+                      max_force_merge_rounds = 5) {
 
   cnvs[, center := round(start + (end-start+1)/2)]
   cnvs_with_CNVR <- data.table()
@@ -76,6 +77,13 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       if (!is.na(plots_path)) save_igraph_plot(plots_path, ig[[1]], ig[[2]], ii)
       gc()
     }
+  }
+
+  for (i in 1:max_force_merge_rounds) {
+    message('Final CNVRs merging round ', i, ' out of ', max_force_merge_rounds)
+    dt <- force_cnvr_merge(cnvs_with_CNVR, cnvrs)
+    cnvs_with_CNVR <- dt[[1]]
+    cnvrs <- dt[[2]]
   }
 
   return(list(cnvs_with_CNVR, cnvrs))
@@ -220,5 +228,45 @@ merge_cnvrs <- function(cnvrs, cnvs, min_iou, leiden_res, arm, ii) {
   # recreate CNVRs table is from updated CNVs table
   cnvrs <- create_cnvrs(cnvs)
 
+  return(list(cnvs, cnvrs))
+}
+
+force_cnvr_merge <- function(cnvs, cnvrs) {
+
+  if (cnvs[CNVR %in% cnvrs[, CNVR], .N] != cnvs[, .N])
+    stop('Some CNVs are assigned to missing CNVRs')
+  if (cnvrs[CNVR %in% cnvs[, CNVR], .N] != cnvrs[, .N])
+    stop('Some CNVRs are assigned to missing CNVs')
+
+  cnvs[, length := end - start + 1]
+  cnvrs[, length := end - start + 1]
+
+  # run by chromosome
+  for (i in cnvrs[, unique(chr)]) {
+    message('Chr ', i)
+    # cnvs and cnvrs per chr
+    dt <- cnvs[chr == i, ]
+    dt_r <- cnvrs[chr == i, ]
+    setorder(dt_r, start)
+    dt_r[, skip := F]
+    # check each cnvr
+    for (ii in 1:dt_r[, .N]) {
+      a <- dt_r[ii]
+      # skip if already merged
+      if (a[, skip]) next
+
+      # reciprocal overlap 0.75
+      dt_r[, overlap := pmin(a$end, end) - pmax(a$start, start)]
+      b <- dt_r[overlap >= 0.75*a$length & overlap >= 0.75*length, ]
+      # skip if the only match is itself
+      if (b[, .N] == 1) next
+
+      # update CNVs of to be merged CNVRs
+      cnvs[CNVR %in% b[, CNVR], CNVR := a[, CNVR]]
+    }
+  }
+
+  # recreate CNVRs from updated CNVs
+  cnvrs <- CNValidatron:::create_cnvrs(cnvs)
   return(list(cnvs, cnvrs))
 }
