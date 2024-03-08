@@ -80,7 +80,7 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
 
   for (i in 1:max_force_merge_rounds) {
     message('Final CNVRs merging round ', i, ' out of ', max_force_merge_rounds)
-    dt <- force_cnvr_merge(cnvs_with_CNVR, cnvrs)
+    dt <- force_cnvr_merge(cnvs_with_CNVR, cnvrs, verbose = T)
     cnvs_with_CNVR <- dt[[1]]
     cnvrs <- dt[[2]]
   }
@@ -230,7 +230,7 @@ merge_cnvrs <- function(cnvrs, cnvs, min_iou, leiden_res, arm, ii) {
   return(list(cnvs, cnvrs))
 }
 
-force_cnvr_merge <- function(cnvs, cnvrs) {
+force_cnvr_merge <- function(cnvs, cnvrs, verbose = F) {
 
   if (cnvs[CNVR %in% cnvrs[, CNVR], .N] != cnvs[, .N])
     stop('Some CNVs are assigned to missing CNVRs')
@@ -242,7 +242,7 @@ force_cnvr_merge <- function(cnvs, cnvrs) {
 
   # run by chromosome
   for (i in cnvrs[, unique(chr)]) {
-    message('Chr ', i)
+    if (verbose) message('Chr ', i)
     # cnvs and cnvrs per chr
     dt <- cnvs[chr == i, ]
     dt_r <- cnvrs[chr == i, ]
