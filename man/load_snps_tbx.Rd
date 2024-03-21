@@ -27,9 +27,9 @@ the CNV length will be added on each side}
 
 \item{adjusted_lrr}{load GC-adjusted LRR on normal LRR (T/F)}
 
-\item{min_lrr}{minimum LRR value (lower values are set to the minimum)}
+\item{min_lrr}{minimum LRR value (lower values are set to the min_lrr)}
 
-\item{max_lrr}{maximum LRR value}
+\item{max_lrr}{maximum LRR value (higher values are set to max_lrr)}
 
 \item{shrink_lrr}{shrink LRR values toword the mean (done separately for
 SNPs before / in / after the CNV}

@@ -32,13 +32,6 @@ LRR/BAF plot, if set to 2 plot the pixelated image in R}
 \item{max_lrr}{see load_snps_tbx() documentation}
 
 \item{shrink_lrr}{see load_snps_tbx() documentation}
-
-\item{in_out_ratio}{see load_snps_tbx() documentation}
-
-\item{w}{size of square side in pixel}
-
-\item{z_ratio}{approximate ratio of z (the blank section between
-the two halves) compared to w}
 }
 \description{
 This function create the pixel matrix that can be saved

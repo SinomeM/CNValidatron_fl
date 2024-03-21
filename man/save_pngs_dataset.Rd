@@ -11,7 +11,6 @@ save_pngs_dataset(
   snps,
   shrink_lrr = 0.2,
   flip_chance = 0.5,
-  hole_chance = 0.2,
   noise_chance = 0.15,
   noise_lvl = 0.1
 )
@@ -29,9 +28,9 @@ save_pngs_dataset(
 
 \item{flip_chance}{probability of saving a flipped example as well}
 
-\item{w}{see plot_cnv()}
+\item{noise_chance}{probability of saving a "noised" example as well}
 
-\item{in_out_ratio}{see load_snps_tbx()}
+\item{noise_lvl}{level of noise introduced in the PNG}
 }
 \description{
 This function is used to create the dataset of PNG images for training.

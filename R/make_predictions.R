@@ -50,6 +50,9 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F) {
             sample_ID := as.integer(gsub('_\\w+.png', '', sample_ID))][,
             ix := NULL]
 
+  if (return_pred_dt)
+    returt(pred_dt)
+
   pred_dt <- merge(pred_dt, cnvs[, .(sample_ID, chr, start, end, numsnp,
                                 length, conf, GT, CN)],
                    by = c('sample_ID', 'start'))

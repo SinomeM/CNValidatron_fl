@@ -16,10 +16,6 @@ save_pngs_prediction(root, cnvs, samps, snps, shrink_lrr = 0.2)
 \item{snps}{snps in the usual format}
 
 \item{shrink_lrr}{see load_snps_tbx(), should be the same the model used in training}
-
-\item{w}{see plot_cnv() must be the same the model used in training}
-
-\item{in_out_ratio}{see load_snps_tbx(), must be the same the model used in training}
 }
 \description{
 This function is used to create the dataset of PNG images for prediction

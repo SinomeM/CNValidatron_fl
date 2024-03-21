@@ -7,8 +7,6 @@
 #' @param cnvs cnv data.table in the usual format
 #' @param samps sample list in usual format
 #' @param snps snps in the usual format
-#' @param w see plot_cnv() must be the same the model used in training
-#' @param in_out_ratio see load_snps_tbx(), must be the same the model used in training
 #' @param shrink_lrr see load_snps_tbx(), should be the same the model used in training
 #'
 #' @export

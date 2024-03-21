@@ -12,6 +12,7 @@
 #' @param leiden_res lower value will tend to create more smaller communities
 #' @param plot_path not yet implemented
 #' @param min_n min n for recomputing CNVRs (small CNVRs might "drown" in very large networks)
+#' @param max_force_merge_rounds how many rounds of force merge are performed at the end of the function
 #'
 #' @import data.table
 #' @import igraph

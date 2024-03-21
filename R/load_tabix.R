@@ -9,8 +9,8 @@
 #' @param in_out_ratio ratio of bp outside the cnv vs inside, per side. A value of one means
 #'        the CNV length will be added on each side
 #' @param adjusted_lrr load GC-adjusted LRR on normal LRR (T/F)
-#' @param min_lrr minimum LRR value (lower values are set to the minimum)
-#' @param max_lrr maximum LRR value
+#' @param min_lrr minimum LRR value (lower values are set to the min_lrr)
+#' @param max_lrr maximum LRR value (higher values are set to max_lrr)
 #' @param shrink_lrr shrink LRR values toword the mean (done separately for
 #'        SNPs before / in / after the CNV
 #'

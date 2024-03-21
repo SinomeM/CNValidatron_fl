@@ -9,9 +9,8 @@
 #' @param snps snps in the usual format
 #' @param shrink_lrr see load_snps_tbx()
 #' @param flip_chance probability of saving a flipped example as well
-#' @param f_chance probability of saving a flipped example as well
-#' @param noise_chance probability of saving a flipped example as well
-#' @param noise_lvl probability of saving a flipped example as well
+#' @param noise_chance probability of saving a "noised" example as well
+#' @param noise_lvl level of noise introduced in the PNG
 #'
 #' @export
 #'

@@ -26,6 +26,8 @@ cnvrs_iou(
 
 \item{min_n}{min n for recomputing CNVRs (small CNVRs might "drown" in very large networks)}
 
+\item{max_force_merge_rounds}{how many rounds of force merge are performed at the end of the function}
+
 \item{chr_arms}{chromsome arms location, from `QCtreeCNV` package}
 
 \item{plot_path}{not yet implemented}
