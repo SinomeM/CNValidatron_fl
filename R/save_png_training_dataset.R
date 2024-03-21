@@ -16,8 +16,7 @@
 #'
 #' @import data.table
 
-save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
-                              shrink_lrr = 0.2, flip_chance = 0.5,
+save_pngs_dataset <- function(root, cnvs, samps, snps, shrink_lrr = 0.2, flip_chance = 0.5,
                               hole_chance = 0.2, noise_chance = 0.15, noise_lvl = 0.1) {
   if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a different path')
 
@@ -53,8 +52,6 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
       warning('no image saved for cnv: ', a)
       return(data.table())
     }
-
-    dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
 
     imager::save.image(imager::as.cimg(dt), pt)
 
