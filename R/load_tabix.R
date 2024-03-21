@@ -32,7 +32,7 @@ load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr
 
   # load the whole chromosome now
   dt <- fread(cmd = paste0("tabix ", tbx_path, " ", chr, ":", 0,
-                          "-", 1000000000, header = F)
+                          "-", 1000000000), header = F)
 
   if (nrow(dt) == 0) {
     warning('File: ', tbx_path, ' seems empty or broken\n')

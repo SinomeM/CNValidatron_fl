@@ -9,8 +9,6 @@ save_pngs_dataset(
   cnvs,
   samps,
   snps,
-  w = 64,
-  in_out_ratio = 3,
   shrink_lrr = 0.2,
   flip_chance = 0.5,
   hole_chance = 0.2,
@@ -27,13 +25,13 @@ save_pngs_dataset(
 
 \item{snps}{snps in the usual format}
 
-\item{w}{see plot_cnv()}
-
-\item{in_out_ratio}{see load_snps_tbx()}
-
 \item{shrink_lrr}{see load_snps_tbx()}
 
 \item{flip_chance}{probability of saving a flipped example as well}
+
+\item{w}{see plot_cnv()}
+
+\item{in_out_ratio}{see load_snps_tbx()}
 }
 \description{
 This function is used to create the dataset of PNG images for training.

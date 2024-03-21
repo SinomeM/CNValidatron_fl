@@ -4,15 +4,7 @@
 \alias{save_pngs_prediction}
 \title{Save the PNG Plots of CNVs for Prediction}
 \usage{
-save_pngs_prediction(
-  root,
-  cnvs,
-  samps,
-  snps,
-  w = 64,
-  in_out_ratio = 3,
-  shrink_lrr = 0.2
-)
+save_pngs_prediction(root, cnvs, samps, snps, shrink_lrr = 0.2)
 }
 \arguments{
 \item{root}{root folder for the dataset. Must not exists.}
@@ -23,11 +15,11 @@ save_pngs_prediction(
 
 \item{snps}{snps in the usual format}
 
+\item{shrink_lrr}{see load_snps_tbx(), should be the same the model used in training}
+
 \item{w}{see plot_cnv() must be the same the model used in training}
 
 \item{in_out_ratio}{see load_snps_tbx(), must be the same the model used in training}
-
-\item{shrink_lrr}{see load_snps_tbx(), should be the same the model used in training}
 }
 \description{
 This function is used to create the dataset of PNG images for prediction

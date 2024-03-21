@@ -8,13 +8,10 @@ plot_cnv(
   cnv,
   samp,
   snps = NULL,
-  in_out_ratio = 1,
   adjusted_lrr = T,
-  w = 64,
-  z_ratio = 0.1,
   tmp_plot = 0,
-  min_lrr = -1.2,
-  max_lrr = 1,
+  min_lrr = -1.4,
+  max_lrr = 1.3,
   shrink_lrr = NULL
 )
 }
@@ -25,14 +22,7 @@ plot_cnv(
 
 \item{snps}{see load_snps_tbx() documentation}
 
-\item{in_out_ratio}{see load_snps_tbx() documentation}
-
 \item{adjusted_lrr}{see load_snps_tbx() documentation}
-
-\item{w}{size of square side in pixel}
-
-\item{z_ratio}{approximate ratio of z (the blank section between
-the two halves) compared to w}
 
 \item{tmp_plot}{for developing, if set to 1 plot the "normal"
 LRR/BAF plot, if set to 2 plot the pixelated image in R}
@@ -42,6 +32,13 @@ LRR/BAF plot, if set to 2 plot the pixelated image in R}
 \item{max_lrr}{see load_snps_tbx() documentation}
 
 \item{shrink_lrr}{see load_snps_tbx() documentation}
+
+\item{in_out_ratio}{see load_snps_tbx() documentation}
+
+\item{w}{size of square side in pixel}
+
+\item{z_ratio}{approximate ratio of z (the blank section between
+the two halves) compared to w}
 }
 \description{
 This function create the pixel matrix that can be saved

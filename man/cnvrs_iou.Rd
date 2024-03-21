@@ -11,7 +11,8 @@ cnvrs_iou(
   min_iou = 0.75,
   leiden_res = 1,
   plots_path = NA,
-  min_n = 20
+  min_n = 20,
+  max_force_merge_rounds = 5
 )
 }
 \arguments{
