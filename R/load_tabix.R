@@ -57,7 +57,7 @@ load_snps_tbx <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr
   # id lrr is missing outside of the cnv 'impute' it
   dt[is.na(lrr) & !between(position, start, end), lrr := dt[!between(position, start, end),
                                                               mean(lrr, na.rm = T)]]
-  # if baf is missing outised the cnv set it to either 0 or 1
+  # if baf is missing outside the cnv set it to either 0 or 1
   dt[is.na(baf) & !between(position, start, end), baf := sample(rep(0:1, length.out = .N))]
   # if lrr or baf is missing inside the cnv exclude the point
   dt <- dt[!((is.na(lrr) | is.na(baf)) & between(position, start, end)),]

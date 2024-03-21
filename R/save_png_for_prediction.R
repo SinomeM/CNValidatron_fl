@@ -16,7 +16,7 @@
 #' @import data.table
 
 save_pngs_prediction <- function(root, cnvs, samps, snps, w = 64, in_out_ratio = 3,
-                              shrink_lrr = 0.2) {
+                                 shrink_lrr = 0.2) {
   if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a different path')
 
   dir.create(root)
