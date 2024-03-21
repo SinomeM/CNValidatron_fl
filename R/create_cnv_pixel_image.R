@@ -25,13 +25,13 @@
 
 
 plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
-                     tmp_plot = 0, min_lrr = -1.5, max_lrr = 1.5,
+                     tmp_plot = 0, min_lrr = -1.4, max_lrr = 1.3,
                      shrink_lrr = NULL) {
 
   # w k1, k2, z and in_out_ratio are fixed for the moment
   w <- 100
   z <- 4
-  k1 <- 30
+  k1 <- 32
   k2 <- 28
   in_out_ratio <- 4
 
@@ -48,7 +48,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   # keep the full chromsome for the third row of the png
   dt_big <- copy(dt)
 
-  # first and second row, select the relevant points and
+  # bottom and middle row, select the relevant points and
   # move position to the x coordinates in the new system
   len <- cnv$end - cnv$start + 1
   ss <- cnv$start - (in_out_ratio*len);  ee <- cnv$end + (in_out_ratio*len)
@@ -67,7 +67,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   dt_baf[, ':=' (x = x+1, y = y+1)]
   dt_lrr[, ':=' (x = x+1, y = y+1)]
 
-  # third row, ~30 Mbp LRR
+  # top row, ~30 Mbp LRR
   center <- cnv$start + len/2
   a <- center - 15000000
   b <- center + 15000000
@@ -95,8 +95,8 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   # temporary check
   if (tmp_plot == 1) {
     a <- ggplot(dt_lrr, aes(x, y)) + geom_point() + xlim(0, w) + ylim(0, k) + theme_bw()
-    b <- ggplot(dt_baf, aes(x, y)) + geom_point() + xlim(0, w) + ylim(k+z, w) + theme_bw()
-    c <- ggplot(dt_big, aes(x, y)) + geom_point() + xlim(0, w) + ylim((k*2)+(z*2), w) + theme_bw()
+    b <- ggplot(dt_baf, aes(x, y)) + geom_point() + xlim(0, w) + ylim(k1+z, k1*2 + z) + theme_bw()
+    c <- ggplot(dt_big, aes(x, y)) + geom_point() + xlim(0, w) + ylim((k1*2)+(z*2), w) + theme_bw()
     return(cowplot::plot_grid(b, a, c, ncol = 1))
   }
 
