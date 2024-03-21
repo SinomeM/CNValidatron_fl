@@ -35,6 +35,9 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2) {
     }
 
     imager::save.image(imager::as.cimg(dt), pt)
+
+    # to be tested, might be unstable when called by multiple workers
+    if (x %% 100 == 0) gc()
   }
 
   # save images using BiocParallel

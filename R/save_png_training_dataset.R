@@ -7,17 +7,18 @@
 #' @param cnvs cnv data.table in the usual format plus the column 'Visual_Output'
 #' @param samps sample list in usual format
 #' @param snps snps in the usual format
-#' @param w see plot_cnv()
-#' @param in_out_ratio see load_snps_tbx()
 #' @param shrink_lrr see load_snps_tbx()
 #' @param flip_chance probability of saving a flipped example as well
+#' @param f_chance probability of saving a flipped example as well
+#' @param noise_chance probability of saving a flipped example as well
+#' @param noise_lvl probability of saving a flipped example as well
 #'
 #' @export
 #'
 #' @import data.table
 
 save_pngs_dataset <- function(root, cnvs, samps, snps, shrink_lrr = 0.2, flip_chance = 0.5,
-                              hole_chance = 0.2, noise_chance = 0.15, noise_lvl = 0.1) {
+                              noise_chance = 0.15, noise_lvl = 0.1) {
   if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a different path')
 
   dir.create(root)
@@ -70,11 +71,8 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, shrink_lrr = 0.2, flip_ch
       imager::save.image(imager::as.cimg(dt), pt)
     }
 
-
-    if (runif(1) <= hole_chance) {
-      # see issue on github
-      ## !!!
-    }
+    # to be tested, might be unstable when called by multiple workers
+    if (x %% 100 == 0) gc()
   }
 
   # save images using BiocParallel
