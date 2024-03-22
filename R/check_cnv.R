@@ -18,8 +18,8 @@
 check_cnv <- function(cnv, samp, snps = NULL, in_out_ratio = 1, adjusted_lrr = T,
                       min_lrr = -1.2, max_lrr = 1, shrink_lrr = NULL) {
 
-  # load snps data
-  dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr, shrink_lrr)
+  # load snps data, check behaviour if needed. load_snps_tbx() has changed
+  dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr, shrink_lrr)[[1]]
 
   dt[between(position, cnv$start, cnv$end), inside := T][is.na(inside), inside := F]
 

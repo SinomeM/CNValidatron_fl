@@ -33,12 +33,12 @@ if (F) {
 # test new PNGs
 if (F) {
   library(data.table)
-  devtools::load_all()
   cnvs <- fread('../../UKB_GW_CNVs/calibration/dels1.txt')
   samples <- fread('../../UKB_GW_CNVs/calibration/samples.txt')
   a <- cnvs[numsnp > 50, ][1]
   b <- samples[sample_ID == a$sample_ID, ]
-  #debugonce(plot_cnv)
-  pl <- plot_cnv(a, b, tmp_plot = 2)
-  pl
+  devtools::load_all()
+  # debugonce(plot_cnv)
+  plot_cnv(a, b, tmp_plot = 2, shrink_lrr = 0.2)
 }
+

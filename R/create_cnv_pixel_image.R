@@ -25,24 +25,30 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
                      shrink_lrr = NULL) {
 
   # w k1, k2, z and in_out_ratio are fixed for the moment
-  w <- 100
+  w <- 96
   z <- 4
-  k1 <- 32
-  k2 <- 28
-  in_out_ratio <- 5
+  k1 <- 31
+  k2 <- 26
+  in_out_ratio <- 4
+  # top row Mbp
+  l_wind <- 20000000
+  # top row LRR range
+  mx_lr = 3
+  # top row normalisation windows size
+  norm_wind_size = 6
 
   # everything will be [0,w-1] then I will add 1 to make it [1,w]
   w <- w-1
 
   # load snps data, ALL chromosome is loaded now!
   dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr, shrink_lrr)
+  # keep the full chromsome for the third row of the png
+  dt_big <- dt[[2]]
+  dt <- dt[[1]]
   if (nrow(dt) == 0) {
     warning('Empty tabix, no image generated for sample', samp$sample_ID)
     return(data.table())
   }
-
-  # keep the full chromsome for the third row of the png
-  dt_big <- copy(dt)
 
   # bottom and middle row, select the relevant points and
   # move position to the x coordinates in the new system
@@ -52,6 +58,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   dt[, x := round(((position-ss)/(ee-ss)) * w)]
 
   # each point need to be used for both lrr and baf so dt must be duplicated
+  # formally the second copy is not needed
   dt_lrr <- copy(dt)
   dt_baf <- copy(dt)
 
@@ -63,25 +70,25 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   dt_baf[, ':=' (x = x+1, y = y+1)]
   dt_lrr[, ':=' (x = x+1, y = y+1)]
 
-  # top row, ~30 Mbp LRR
+  # top row
   center <- cnv$start + len/2
-  a <- center - 15000000
-  b <- center + 15000000
+  a <- center - l_wind/2
+  b <- center + l_wind/2
   # if a is out of bound then the 30Mbp region must start from the first SNP
   if (a < dt_big[, min(position)]) {
     a <- dt_big[, min(position)]
-    b <- a+30000000
+    b <- a+l_wind
   }
   else
   # same thing on the other side, both cannot be true at the same time in a human genome
     if (b > dt_big[, max(position)]) {
       b <- dt_big[, max(position)]
-      a <- b-30000000
+      a <- b-l_wind
     }
 
   dt_big <- dt_big[between(position, a, b),]
   dt_big[, x := round(((position-a)/(b-a)) * w)]
-  dt_big[, y := round(((lrr-(min_lrr))/(max_lrr-(min_lrr))) * k2) + (k1*2 + z*2)]
+  dt_big[, y := round(((lrr-(-mx_lr))/(mx_lr-(-mx_lr))) * k2) + (k1*2 + z*2)]
   dt_big[, ':=' (x = x+1, y = y+1)]
 
   w <- w+1
@@ -94,13 +101,20 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
     return(cowplot::plot_grid(b, a, c, ncol = 1))
   }
 
-  # create the pixel map
+  # create the pixel map, and normalise values between 0 and 1
   dt_lrr <- dt_lrr[, .N, by = c('x', 'y')][, N := N/max(N)]
   dt_baf <- dt_baf[, .N, by = c('x', 'y')][, N := N/max(N)]
-  dt_big <- dt_big[, .N, by = c('x', 'y')][, N := N/max(N)]
+  # the top row normalisation is performed in windows first, then on all
+  dt_big <- dt_big[, .N, by = c('x', 'y')]
+  dt_big[, wind := x %% norm_wind_size]
+  dt_big[, n := N/max(N), by = wind]
+  dt_big[, N := n][, n := NULL][, N := N/max(N)]
+
+  # create the full picture
   dt <- as.data.table(rbind(t(combn(1:w, 2)), t((combn(w:1, 2))))) # almost all combinations
   colnames(dt) <- c('x', 'y')
   dt <- rbind(dt, data.table(x = 1:w, y = 1:w)) # the diagonal was missing
+  # fill in the values
   dt <- merge(dt, dt_lrr, by = c('x', 'y'), all.x = T)
   setnames(dt, 'N', 'a')
   dt <- merge(dt, dt_baf, by = c('x', 'y'), all.x = T)
@@ -115,7 +129,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   dt <- dt[, .(x, y, value)]
 
   if (tmp_plot == 2)
-    return(ggplot(dt, aes(x, y, fill = value)) + geom_tile() + theme_bw() +
+    return(ggplot(dt, aes(x, y, fill = value)) + geom_tile() + theme_minimal() +
              scale_fill_gradient(low="white", high="black"))
   ## HERE ##
 
