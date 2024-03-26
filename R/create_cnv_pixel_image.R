@@ -33,7 +33,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   # top row Mbp
   l_wind <- 20000000
   # top row LRR range
-  mx_lr = 3
+  mx_lr = 2.5
   # top row normalisation windows size
   norm_wind_size = 6
 
@@ -93,12 +93,37 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
 
   w <- w+1
 
-  # temporary check
+  # plot in the original space
   if (tmp_plot == 1) {
-    a <- ggplot(dt_lrr, aes(x, y)) + geom_point() + xlim(0, w) + ylim(0+1, k1+1) + theme_bw()
-    b <- ggplot(dt_baf, aes(x, y)) + geom_point() + xlim(0, w) + ylim(k1+z + 1, k1*2 + z + 1) + theme_bw()
-    c <- ggplot(dt_big, aes(x, y)) + geom_point() + xlim(0, w) + ylim((k1*2)+(z*2) + 1, w + 1) + theme_bw()
-    return(cowplot::plot_grid(b, a, c, ncol = 1))
+    a <- ggplot(dt_lrr, aes(position, lrr)) + geom_point(alpha = 0.1, colour = 'red') +
+           ylim(min_lrr, max_lrr) + theme_bw() +
+           theme(axis.title.x = element_blank(), axis.title.y = element_blank())
+    b <- ggplot(dt_baf, aes(position, baf)) + geom_point(alpha = 0.1, colour = 'blue') +
+           theme_bw() +
+           theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+                 axis.title.x = element_blank(), axis.title.y = element_blank())
+    c <- ggplot(dt_big, aes(position, lrr)) + geom_point(alpha = 0.05, colour = 'purple') +
+           geom_segment(x = cnv$start, xend = cnv$end, y = 0, yend = 0) +
+           ylim(min_lrr, max_lrr) + theme_bw() +
+           theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+                 axis.title.x = element_blank(), axis.title.y = element_blank())
+    return(cowplot::plot_grid(c, b, a, ncol = 1))
+  }
+
+  # plot in the new coordinates but suitable for humans
+  if (tmp_plot == 2) {
+    a <- ggplot(dt_lrr, aes(x, y)) + geom_point(alpha = 0.1, colour = 'red') +
+           xlim(0, w) + ylim(0+1, k1+1) + theme_bw() +
+           theme(axis.title.x = element_blank(), axis.title.y = element_blank())
+    b <- ggplot(dt_baf, aes(x, y)) + geom_point(alpha = 0.1, colour = 'blue') +
+           xlim(0, w) + ylim(k1+z + 1, k1*2 + z + 1) + theme_bw() +
+           theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+                 axis.title.x = element_blank(), axis.title.y = element_blank())
+    c <- ggplot(dt_big, aes(x, y)) + geom_point(alpha = 0.05, colour = 'purple') +
+           xlim(0, w) + ylim((k1*2)+(z*2) + 1, w + 1) + theme_bw() +
+           theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+                 axis.title.x = element_blank(), axis.title.y = element_blank())
+    return(cowplot::plot_grid(c, b, a, ncol = 1))
   }
 
   # create the pixel map, and normalise values between 0 and 1
@@ -106,8 +131,10 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   dt_baf <- dt_baf[, .N, by = c('x', 'y')][, N := N/max(N)]
   # the top row normalisation is performed in windows first, then on all
   dt_big <- dt_big[, .N, by = c('x', 'y')]
-  dt_big[, wind := x %% norm_wind_size]
-  dt_big[, n := N/max(N), by = wind]
+  dt_big[, wind1 := x %% norm_wind_size]
+  dt_big[, wind2 := x %% (norm_wind_size+2)]
+  dt_big[, n := N/max(N), by = wind1]
+  dt_big[, n := N/max(N), by = wind2]
   dt_big[, N := n][, n := NULL][, N := N/max(N)]
 
   # create the full picture
@@ -128,10 +155,10 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   dt[is.na(a) & is.na(b) & is.na(c), value := 0]
   dt <- dt[, .(x, y, value)]
 
-  if (tmp_plot == 2)
+  # plot almost identical to the final PNG
+  if (tmp_plot == 3)
     return(ggplot(dt, aes(x, y, fill = value)) + geom_tile() + theme_minimal() +
              scale_fill_gradient(low="white", high="black"))
-  ## HERE ##
 
   dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
 

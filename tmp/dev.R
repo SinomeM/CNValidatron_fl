@@ -33,12 +33,24 @@ if (F) {
 # test new PNGs
 if (F) {
   library(data.table)
-  cnvs <- fread('../../UKB_GW_CNVs/calibration/dels1.txt')
+  dels <- fread('../../UKB_GW_CNVs/calibration/dels1.txt')
+  dups <- fread('../../UKB_GW_CNVs/calibration/dups1.txt')
   samples <- fread('../../UKB_GW_CNVs/calibration/samples.txt')
-  a <- cnvs[numsnp > 50, ][1]
+  # get a random deletion from the calbration set
+  a <- dels[numsnp > 50, ][sample(1:.N, 1)]
   b <- samples[sample_ID == a$sample_ID, ]
   devtools::load_all()
   # debugonce(plot_cnv)
+  plot_cnv(a, b, tmp_plot = 1, shrink_lrr = 0.2)
   plot_cnv(a, b, tmp_plot = 2, shrink_lrr = 0.2)
+  plot_cnv(a, b, tmp_plot = 3, shrink_lrr = 0.2)
+  # get a random duplication from the calbration set
+  a <- dups[numsnp > 50, ][sample(1:.N, 1)]
+  b <- samples[sample_ID == a$sample_ID, ]
+  devtools::load_all()
+  # debugonce(plot_cnv)
+  plot_cnv(a, b, tmp_plot = 1, shrink_lrr = 0.2)
+  plot_cnv(a, b, tmp_plot = 2, shrink_lrr = 0.2)
+  plot_cnv(a, b, tmp_plot = 3, shrink_lrr = 0.2)
 }
 
