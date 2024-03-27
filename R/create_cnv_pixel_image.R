@@ -29,7 +29,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   z <- 4
   k1 <- 31
   k2 <- 26
-  in_out_ratio <- 4
+  in_out_ratio <- 5
   # top row Mbp
   l_wind <- 20000000
   # top row LRR range
@@ -95,14 +95,15 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
 
   # plot in the original space
   if (tmp_plot == 1) {
-    a <- ggplot(dt_lrr, aes(position, lrr)) + geom_point(alpha = 0.1, colour = 'red') +
+    a <- ggplot(dt_lrr, aes(position, lrr)) + geom_point(alpha = 0.3, colour = 'red') +
            ylim(min_lrr, max_lrr) + theme_bw() +
+           geom_segment(x = cnv$start, xend = cnv$end, y = 0, yend = 0, linetype = 3) +
            theme(axis.title.x = element_blank(), axis.title.y = element_blank())
-    b <- ggplot(dt_baf, aes(position, baf)) + geom_point(alpha = 0.1, colour = 'blue') +
+    b <- ggplot(dt_baf, aes(position, baf)) + geom_point(alpha = 0.3, colour = 'blue') +
            theme_bw() +
            theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
                  axis.title.x = element_blank(), axis.title.y = element_blank())
-    c <- ggplot(dt_big, aes(position, lrr)) + geom_point(alpha = 0.05, colour = 'purple') +
+    c <- ggplot(dt_big, aes(position, lrr)) + geom_point(alpha = 0.1, colour = 'purple') +
            geom_segment(x = cnv$start, xend = cnv$end, y = 0, yend = 0) +
            ylim(min_lrr, max_lrr) + theme_bw() +
            theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
