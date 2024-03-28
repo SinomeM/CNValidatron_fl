@@ -22,20 +22,14 @@
 
 plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
                      tmp_plot = 0, min_lrr = -1.4, max_lrr = 1.3,
-                     shrink_lrr = NULL) {
+                     # the following parameters should not be changed by most users
+                     shrink_lrr = 0.1, w = 96, z = 4, k1 = 31, k2 = 26, in_out_ratio = 6,
+                     l_wind = 20000000, # top row Mbp
+                     mx_lr = 2.5,  # top row LRR range
+                     norm_wind_size = 6) { # top row normalisation windows size
 
   # w k1, k2, z and in_out_ratio are fixed for the moment
-  w <- 96
-  z <- 4
-  k1 <- 31
-  k2 <- 26
-  in_out_ratio <- 5
-  # top row Mbp
-  l_wind <- 20000000
-  # top row LRR range
-  mx_lr = 2.5
-  # top row normalisation windows size
-  norm_wind_size = 6
+
 
   # everything will be [0,w-1] then I will add 1 to make it [1,w]
   w <- w-1
@@ -96,11 +90,11 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   # plot in the original space
   if (tmp_plot == 1) {
     a <- ggplot(dt_lrr, aes(position, lrr)) + geom_point(alpha = 0.3, colour = 'red') +
-           ylim(min_lrr, max_lrr) + theme_bw() +
+           ylim(min_lrr, max_lrr) + theme_bw() + xlim(ss, ee) +
            geom_segment(x = cnv$start, xend = cnv$end, y = 0, yend = 0, linetype = 3) +
            theme(axis.title.x = element_blank(), axis.title.y = element_blank())
     b <- ggplot(dt_baf, aes(position, baf)) + geom_point(alpha = 0.3, colour = 'blue') +
-           theme_bw() +
+           theme_bw() + xlim(ss, ee) +
            theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
                  axis.title.x = element_blank(), axis.title.y = element_blank())
     c <- ggplot(dt_big, aes(position, lrr)) + geom_point(alpha = 0.1, colour = 'purple') +
