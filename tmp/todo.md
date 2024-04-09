@@ -19,8 +19,8 @@
 -lorem
 
 
-## Association analysismake
-- the center position of each bin the "POS" columns and treat them as
+## Association analysis
+- make the center position of each bin the "POS" columns and treat them as
   clumped SNPs???
 - Especially when using large bin, it could be considered computing the
   IOU (super easy from the long table). Maybe bin size should be set at
