@@ -54,3 +54,27 @@ if (F) {
   plot_cnv(a, b, tmp_plot = 3, shrink_lrr = 0.2)
 }
 
+if (F) {
+  library(data.table)
+  tdel <- fread("~/Documents/CNValidatron_trained_models/third_iteration/visual_inspection/true_dels_vi_res.txt")
+  tdup <- fread("~/Documents/CNValidatron_trained_models/third_iteration/visual_inspection/true_dups_vi_res.txt")
+  fals <- fread("~/Documents/CNValidatron_trained_models/third_iteration/visual_inspection/false_vi_res.txt")
+  samp <- fread('~/Documents/CNValidatron_trained_models/third_iteration/samples.txt')
+  snps <- fread('~/Documents/UKB_data/data/snppos_filtered.txt')
+
+  # small
+  a <- tdel[length <=  100000 & vo == 1, ][sample(1:.N, 1), ]
+  a <- tdup[length <=  100000 & vo == 1, ][sample(1:.N, 1), ]
+  a <- fals[length <=  100000 & vo == 2, ][sample(1:.N, 1), ]
+  # medium/large
+  a <- tdel[length >  100000 & vo == 1, ][sample(1:.N, 1), ]
+  a <- tdup[length >  100000 & vo == 1, ][sample(1:.N, 1), ]
+  a <- fals[length >  100000 & vo == 2, ][sample(1:.N, 1), ]
+  # large
+  a <- tdel[length >  1000000 & vo == 1, ][sample(1:.N, 1), ]
+  a <- tdup[length >  1000000 & vo == 1, ][sample(1:.N, 1), ]
+  a <- fals[length >  1000000 & vo == 2, ][sample(1:.N, 1), ]
+
+  devtools::load_all()
+  plot_cnv(a, samp[sample_ID == a$sample_ID, ], snps, tmp_plot = 3, shrink_lrr = 0.2)
+}

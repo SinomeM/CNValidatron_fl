@@ -23,7 +23,7 @@
 plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
                      tmp_plot = 0, min_lrr = -1.4, max_lrr = 1.3,
                      # the following parameters should not be changed by most users
-                     shrink_lrr = 0.1, w = 96, z = 4, k1 = 31, k2 = 26, in_out_ratio = 6,
+                     shrink_lrr = 0.1, w = 96, z = 4, k1 = 31, k2 = 26,
                      l_wind = 20000000, # top row Mbp
                      mx_lr = 2.5,  # top row LRR range
                      norm_wind_size = 6) { # top row normalisation windows size
@@ -33,6 +33,16 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
 
   # everything will be [0,w-1] then I will add 1 to make it [1,w]
   w <- w-1
+
+  # in_out_ratio is now a function of the legnth
+  len <- cnv$end - cnv$start + 1
+  if (len <= 100000) in_out_ratio <- 9
+  if (between(len, 100001, 1000000)) in_out_ratio <- 7
+  if (len > 1000000) in_out_ratio <- 5
+  ss <- cnv$start - (in_out_ratio*len);  ee <- cnv$end + (in_out_ratio*len)
+
+  message(in_out_ratio)
+
 
   # load snps data, ALL chromosome is loaded now!
   dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr, shrink_lrr)
@@ -44,11 +54,9 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
     return(data.table())
   }
 
-  # bottom and middle row, select the relevant points and
-  # move position to the x coordinates in the new system
-  len <- cnv$end - cnv$start + 1
-  ss <- cnv$start - (in_out_ratio*len);  ee <- cnv$end + (in_out_ratio*len)
-  dt <- dt[between(position, ss, ee), ]
+
+  # bottom and middle row, move position to the x coordinates in the new system
+  # dt <- dt[between(position, ss, ee), ] # already done in load_snps_tbx()
   dt[, x := round(((position-ss)/(ee-ss)) * w)]
 
   # each point need to be used for both lrr and baf so dt must be duplicated
@@ -64,31 +72,40 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   dt_baf[, ':=' (x = x+1, y = y+1)]
   dt_lrr[, ':=' (x = x+1, y = y+1)]
 
-  # top row
-  center <- cnv$start + len/2
-  a <- center - l_wind/2
-  b <- center + l_wind/2
-  # if a is out of bound then the 30Mbp region must start from the first SNP
-  if (a < dt_big[, min(position)]) {
-    a <- dt_big[, min(position)]
-    b <- a+l_wind
-  }
-  else
-  # same thing on the other side, both cannot be true at the same time in a human genome
-    if (b > dt_big[, max(position)]) {
-      b <- dt_big[, max(position)]
-      a <- b-l_wind
-    }
 
-  dt_big <- dt_big[between(position, a, b),]
-  dt_big[, x := round(((position-a)/(b-a)) * w)]
+  # top row
+#   center <- cnv$start + len/2
+#   a <- center - l_wind/2
+#   b <- center + l_wind/2
+#   # if a is out of bound then the ~15Mbp region must start from the first SNP
+#   if (a < dt_big[, min(position)]) {
+#     a <- dt_big[, min(position)]
+#     b <- a+l_wind
+#   }
+#   else
+#   # same thing on the other side, both cannot be true at the same time in a human genome
+#     if (b > dt_big[, max(position)]) {
+#       b <- dt_big[, max(position)]
+#       a <- b-l_wind
+#     }
+  #  the top row is zoomed out by a factor of 3
+  ss2 <- cnv$start - (in_out_ratio*len*3);  ee2 <- cnv$end + (in_out_ratio*len*3)
+  # if it is not at least 12.5Mbp then force it to 12.5Mbp
+  len_diff <- (12500000 - (ee2 - ss2 + 1)) / 2
+  if (len_diff > 0) {
+    ss2 <- ss2 - len_diff
+    ee2 <- ee2 + len_diff
+  }
+
+  dt_big <- dt_big[between(position, ss2, ee2),]
+  dt_big[, x := round(((position-ss2)/(ee2-ss2)) * w)]
   dt_big[, y := round(((lrr-(-mx_lr))/(mx_lr-(-mx_lr))) * k2) + (k1*2 + z*2)]
   dt_big[, ':=' (x = x+1, y = y+1)]
 
   w <- w+1
 
   # plot in the original space
-  if (tmp_plot == 1) {
+  if (tmp_plot %in% c(1,3)) {
     a <- ggplot(dt_lrr, aes(position, lrr)) + geom_point(alpha = 0.3, colour = 'red') +
            ylim(min_lrr, max_lrr) + theme_bw() + xlim(ss, ee) +
            geom_segment(x = cnv$start, xend = cnv$end, y = 0, yend = 0, linetype = 3) +
@@ -99,10 +116,12 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
                  axis.title.x = element_blank(), axis.title.y = element_blank())
     c <- ggplot(dt_big, aes(position, lrr)) + geom_point(alpha = 0.1, colour = 'purple') +
            geom_segment(x = cnv$start, xend = cnv$end, y = 0, yend = 0) +
-           ylim(min_lrr, max_lrr) + theme_bw() +
+           ylim(min_lrr, max_lrr) + theme_bw() + xlim(ss2, ee2) +
            theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
                  axis.title.x = element_blank(), axis.title.y = element_blank())
-    return(cowplot::plot_grid(c, b, a, ncol = 1))
+
+    pl <- cowplot::plot_grid(c, b, a, ncol = 1)
+    if (tmp_plot == 1) return(pl)
   }
 
   # plot in the new coordinates but suitable for humans
@@ -124,12 +143,18 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   # create the pixel map, and normalise values between 0 and 1
   dt_lrr <- dt_lrr[, .N, by = c('x', 'y')][, N := N/max(N)]
   dt_baf <- dt_baf[, .N, by = c('x', 'y')][, N := N/max(N)]
+
+  # slightly increase the weight of the central BAF region
+  # # ...
+
   # the top row normalisation is performed in windows first, then on all
   dt_big <- dt_big[, .N, by = c('x', 'y')]
-  dt_big[, wind1 := x %% norm_wind_size]
-  dt_big[, wind2 := x %% (norm_wind_size+2)]
-  dt_big[, n := N/max(N), by = wind1]
-  dt_big[, n := N/max(N), by = wind2]
+  #if (T) { # windows normalisation
+  #  dt_big[, wind1 := x %% norm_wind_size]
+  #  dt_big[, wind2 := x %% (norm_wind_size+2)]
+  #  dt_big[, n := N/max(N), by = wind1]
+  #  dt_big[, n := N/max(N), by = wind2]
+  #}
   dt_big[, N := n][, n := NULL][, N := N/max(N)]
 
   # create the full picture
@@ -151,9 +176,11 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   dt <- dt[, .(x, y, value)]
 
   # plot almost identical to the final PNG
-  if (tmp_plot == 3)
-    return(ggplot(dt, aes(x, y, fill = value)) + geom_tile() + theme_minimal() +
-             scale_fill_gradient(low="white", high="black"))
+  if (tmp_plot == 3) {
+    pl2 <- ggplot(dt, aes(x, y, fill = value)) + geom_tile() + theme_minimal() +
+             scale_fill_gradient(low="white", high="black")
+    return(cowplot::plot_grid(pl, pl2, ncol = 2))
+  }
 
   dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
 
