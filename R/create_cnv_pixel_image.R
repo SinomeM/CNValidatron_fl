@@ -25,8 +25,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
                      # the following parameters should not be changed by most users
                      shrink_lrr = 0.1, w = 96, z = 4, k1 = 31, k2 = 26,
                      l_wind = 20000000, # top row Mbp
-                     mx_lr = 2.5,  # top row LRR range
-                     norm_wind_size = 6) { # top row normalisation windows size
+                     mx_lr = 2) {  # top row LRR range
 
   # w k1, k2, z and in_out_ratio are fixed for the moment
 
@@ -40,8 +39,6 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   if (between(len, 100001, 1000000)) in_out_ratio <- 7
   if (len > 1000000) in_out_ratio <- 5
   ss <- cnv$start - (in_out_ratio*len);  ee <- cnv$end + (in_out_ratio*len)
-
-  message(in_out_ratio)
 
 
   # load snps data, ALL chromosome is loaded now!
@@ -60,9 +57,8 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   dt[, x := round(((position-ss)/(ee-ss)) * w)]
 
   # each point need to be used for both lrr and baf so dt must be duplicated
-  # formally the second copy is not needed
   dt_lrr <- copy(dt)
-  dt_baf <- copy(dt)
+  dt_baf <- dt
 
   # move lrr and baf on hte y coordinates in the new system
   dt_lrr[, y := round(((lrr-(min_lrr))/(max_lrr-(min_lrr))) * k1)]
@@ -74,20 +70,6 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
 
 
   # top row
-#   center <- cnv$start + len/2
-#   a <- center - l_wind/2
-#   b <- center + l_wind/2
-#   # if a is out of bound then the ~15Mbp region must start from the first SNP
-#   if (a < dt_big[, min(position)]) {
-#     a <- dt_big[, min(position)]
-#     b <- a+l_wind
-#   }
-#   else
-#   # same thing on the other side, both cannot be true at the same time in a human genome
-#     if (b > dt_big[, max(position)]) {
-#       b <- dt_big[, max(position)]
-#       a <- b-l_wind
-#     }
   #  the top row is zoomed out by a factor of 3
   ss2 <- cnv$start - (in_out_ratio*len*3);  ee2 <- cnv$end + (in_out_ratio*len*3)
   # if it is not at least 12.5Mbp then force it to 12.5Mbp
@@ -140,22 +122,12 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
     return(cowplot::plot_grid(c, b, a, ncol = 1))
   }
 
-  # create the pixel map, and normalise values between 0 and 1
-  dt_lrr <- dt_lrr[, .N, by = c('x', 'y')][, N := N/max(N)]
-  dt_baf <- dt_baf[, .N, by = c('x', 'y')][, N := N/max(N)]
 
-  # slightly increase the weight of the central BAF region
-  # # ...
+  # create the pixel map
+  dt_lrr <- get_normalised_pixel_values(dt_lrr, w, in_out_ratio)
+  dt_baf <- get_normalised_pixel_values(dt_baf, w, in_out_ratio)
+  dt_big <- get_normalised_pixel_values(dt_big, w, in_out_ratio)
 
-  # the top row normalisation is performed in windows first, then on all
-  dt_big <- dt_big[, .N, by = c('x', 'y')]
-  #if (T) { # windows normalisation
-  #  dt_big[, wind1 := x %% norm_wind_size]
-  #  dt_big[, wind2 := x %% (norm_wind_size+2)]
-  #  dt_big[, n := N/max(N), by = wind1]
-  #  dt_big[, n := N/max(N), by = wind2]
-  #}
-  dt_big[, N := n][, n := NULL][, N := N/max(N)]
 
   # create the full picture
   dt <- as.data.table(rbind(t(combn(1:w, 2)), t((combn(w:1, 2))))) # almost all combinations
@@ -186,4 +158,30 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
 
   return(dt)
 
+}
+
+
+get_normalised_pixel_values <- function(dt, w, in_out_ratio) {
+
+  if (in_out_ratio == 9) steps <- 2
+  if (in_out_ratio == 7) steps <- 3
+  if (in_out_ratio == 5) steps <- 5
+
+  wind_size <- w %/% 2^steps
+
+  # get N for each pixel
+  dt <- dt[, .N, by = c('x', 'y')]
+  dt[, N := as.numeric(N)]
+
+  for (i in 1:steps-1) {
+    # create windows
+    wind_size <- wind_size * i
+    dt[, wind := x %/% wind_size]
+    # z score normalisation per window
+    dt[, N := (N - mean(N)) / sd(N), by = wind]
+  }
+  # min max normalisation, move to [0,1]. The minimum is moved to 0.1 to increase the contrast at low N
+  dt[, N := (((N-min(N)) / (max(N)-min(N))) / 1.11) + 0.1, by = wind]
+
+  return(dt)
 }
