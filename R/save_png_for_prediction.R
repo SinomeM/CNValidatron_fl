@@ -14,7 +14,7 @@
 #' @import data.table
 
 save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2) {
-  if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a different path')
+  if (dir.exists(root)) warning('Root folder already exists!')
 
   dir.create(root)
   dir.create(paste0(root, '/new'))
@@ -24,15 +24,18 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2) {
 
     pt <- paste0(root, '/new/samp', a$sample_ID, '_st', a$start, '.png')
 
-    dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
-                   w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
+    if (!file.exists(pt)) {
 
-    if (nrow(dt) == 0) {
-      warning('no image saved for cnv: ', a)
-      return(data.table())
+      dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
+                     shrink_lrr = shrink_lrr)
+
+      if (nrow(dt) == 0) {
+        warning('no image saved for cnv: ', a)
+        return(data.table())
+      }
+
+      imager::save.image(imager::as.cimg(dt), pt)
     }
-
-    imager::save.image(imager::as.cimg(dt), pt)
 
     # to be tested, might be unstable when called by multiple workers
     if (x %% 100 == 0) gc()
