@@ -22,7 +22,7 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2) {
   FUN <- function(x) {
     a <- cnvs[x]
 
-    pt <- paste0(root, '/new/', a$sample_ID, '_', a$start, '.png')
+    pt <- paste0(root, '/new/samp', a$sample_ID, '_st', a$start, '.png')
 
     dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
                    w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
