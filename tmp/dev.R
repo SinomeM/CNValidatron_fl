@@ -58,7 +58,7 @@ if (F) {
     #a <- tdup[vo == 1, ][sample(1:.N, 1), ]
     message(round(a$length/1000000, 2))
     print(plot_cnv(a, samp[sample_ID == a$sample_ID, ], snps, tmp_plot = 3, shrink_lrr = 0.2))
-    Sys.sleep(7)
+    Sys.sleep(5)
   }
 }
 

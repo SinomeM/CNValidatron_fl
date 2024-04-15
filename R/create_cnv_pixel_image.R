@@ -185,3 +185,14 @@ get_normalised_pixel_values <- function(dt, w, in_out_ratio) {
 
   return(dt)
 }
+
+get_normalised_pixel_values_simple <- function(dt) {
+
+  # get N for each pixel
+  dt <- dt[, .N, by = c('x', 'y')]
+  dt[, N := as.numeric(N)]
+
+  dt[, N := (N-min(N)) / (max(N)-min(N)), ]
+
+  return(dt)
+}
