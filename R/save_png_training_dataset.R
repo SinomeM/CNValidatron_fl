@@ -17,7 +17,7 @@
 #' @import data.table
 
 save_pngs_dataset <- function(root, cnvs, samps, snps, shrink_lrr = 0.2, flip_chance = 0.5,
-                              noise_chance = 0.15, noise_lvl = 0.1) {
+                              noise_chance = 0, noise_lvl = 0.1) {
   if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a different path')
 
   dir.create(root)
@@ -29,24 +29,24 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, shrink_lrr = 0.2, flip_ch
     a <- cnvs[x]
 
     if (a$GT == 1) {
-      if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/', a$sample_ID,
-                                             '_', a$start, '.png')
-      if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID,
-                                             '_', a$start, '.png')
-      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_del/', a$sample_ID,
-                                             '_', a$start, '.png')
+      if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/samp', a$sample_ID,
+                                             '_st', a$start, '.png')
+      if (a$Visual_Output == 2) pt <- paste0(root, '/false/samp', a$sample_ID,
+                                             '_st', a$start, '.png')
+      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_del/samp', a$sample_ID,
+                                             '_st', a$start, '.png')
     }
     if (a$GT == 2) {
-      if (a$Visual_Output == 1) pt <- paste0(root, '/true_dup/', a$sample_ID,
-                                             '_', a$start, '.png')
-      if (a$Visual_Output == 2) pt <- paste0(root, '/false/', a$sample_ID,
-                                             '_', a$start, '.png')
-      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_dup/', a$sample_ID,
-                                             '_', a$start, '.png')
+      if (a$Visual_Output == 1) pt <- paste0(root, '/true_dup/samp', a$sample_ID,
+                                             '_st', a$start, '.png')
+      if (a$Visual_Output == 2) pt <- paste0(root, '/false/samp', a$sample_ID,
+                                             '_st', a$start, '.png')
+      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_dup/samp', a$sample_ID,
+                                             '_st', a$start, '.png')
     }
 
     dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
-                   w = w, in_out_ratio = in_out_ratio, shrink_lrr = shrink_lrr)
+                   shrink_lrr = shrink_lrr)
 
     if (nrow(dt) == 0) {
       warning('no image saved for cnv: ', a)
