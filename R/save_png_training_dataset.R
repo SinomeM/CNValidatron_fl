@@ -4,7 +4,7 @@
 #' At the moment not all options for plot_cnv() are available here.
 #'
 #' @param root root folder for the dataset. Must not exists.
-#' @param cnvs cnv data.table in the usual format plus the column 'Visual_Output'
+#' @param cnvs cnv data.table in the usual format plus the column 'vo'
 #' @param samps sample list in usual format
 #' @param snps snps in the usual format
 #' @param shrink_lrr see load_snps_tbx()
@@ -29,19 +29,19 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, shrink_lrr = 0.2, flip_ch
     a <- cnvs[x]
 
     if (a$GT == 1) {
-      if (a$Visual_Output == 1) pt <- paste0(root, '/true_del/samp', a$sample_ID,
+      if (a$vo == 1) pt <- paste0(root, '/true_del/samp', a$sample_ID,
                                              '_st', a$start, '.png')
-      if (a$Visual_Output == 2) pt <- paste0(root, '/false/samp', a$sample_ID,
+      if (a$vo == 2) pt <- paste0(root, '/false/samp', a$sample_ID,
                                              '_st', a$start, '.png')
-      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_del/samp', a$sample_ID,
+      if (a$vo == 3) pt <- paste0(root, '/unk_del/samp', a$sample_ID,
                                              '_st', a$start, '.png')
     }
     if (a$GT == 2) {
-      if (a$Visual_Output == 1) pt <- paste0(root, '/true_dup/samp', a$sample_ID,
+      if (a$vo == 1) pt <- paste0(root, '/true_dup/samp', a$sample_ID,
                                              '_st', a$start, '.png')
-      if (a$Visual_Output == 2) pt <- paste0(root, '/false/samp', a$sample_ID,
+      if (a$vo == 2) pt <- paste0(root, '/false/samp', a$sample_ID,
                                              '_st', a$start, '.png')
-      if (a$Visual_Output == 3) pt <- paste0(root, '/unk_dup/samp', a$sample_ID,
+      if (a$vo == 3) pt <- paste0(root, '/unk_dup/samp', a$sample_ID,
                                              '_st', a$start, '.png')
     }
 
