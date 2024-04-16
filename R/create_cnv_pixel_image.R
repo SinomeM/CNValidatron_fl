@@ -179,7 +179,8 @@ get_normalised_pixel_values <- function(dt, w, in_out_ratio) {
 
   # get N for each pixel
   dt <- dt[, .N, by = c('x', 'y')]
-  dt[, N := as.numeric(N)]
+  dt[N >= 1, N := N + 1]
+  dt[, N := log(N + 0.0000000001)]
 
   for (i in 1:steps-1) {
     # create windows
