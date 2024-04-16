@@ -190,7 +190,7 @@ get_normalised_pixel_values <- function(dt, w, in_out_ratio) {
     dt[, N := (N - mean(N)) / sd(N), by = wind]
   }
   # min max normalisation, move to [0,1]. The minimum is moved to 0.05 to increase the contrast at low N
-  dt[, N := (((N-min(N)) / (max(N)-min(N))) / 1.05) + 0.05, by = wind]
+  dt[, N := (((N-min(N)) / (max(N)-min(N))) / 1.081) + 0.075, by = wind]
 
   return(dt)
 }
@@ -204,7 +204,7 @@ get_normalised_pixel_values_simple <- function(dt) {
 
   # min max normalization on the log scale
   dt[, N := log(N + 0.0000000001)]
-  dt[, N := (((N-min(N)) / (max(N)-min(N))) / 1.05) + 0.05, ]
+  dt[, N := (((N-min(N)) / (max(N)-min(N))) / 1.081) + 0.075, ]
 
   return(dt)
 }
