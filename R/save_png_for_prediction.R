@@ -14,7 +14,7 @@
 #' @import data.table
 
 save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
-                                 simple_min_max = F, use_log = F) {
+                                 simple_min_max = F) {
   if (dir.exists(root)) warning('Root folder already exists!')
 
   dir.create(root)
@@ -28,7 +28,7 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
     if (!file.exists(pt)) {
 
       dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
-                     shrink_lrr = shrink_lrr, simple_min_max = simple_min_max, use_log = use_log)
+                     shrink_lrr = shrink_lrr, simple_min_max = simple_min_max)
 
       if (nrow(dt) == 0) {
         warning('no image saved for cnv: ', a)

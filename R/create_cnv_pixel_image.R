@@ -126,9 +126,9 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
 
   # create the pixel map
   if (simple_min_max) {
-    dt_lrr <- get_normalised_pixel_values_simple(dt_lrr, use_log)
-    dt_baf <- get_normalised_pixel_values_simple(dt_baf, use_log)
-    dt_big <- get_normalised_pixel_values_simple(dt_big, use_log)
+    dt_lrr <- get_normalised_pixel_values_simple(dt_lrr)
+    dt_baf <- get_normalised_pixel_values_simple(dt_baf)
+    dt_big <- get_normalised_pixel_values_simple(dt_big)
   }
   else {
     dt_lrr <- get_normalised_pixel_values(dt_lrr, w, in_out_ratio)
@@ -188,22 +188,22 @@ get_normalised_pixel_values <- function(dt, w, in_out_ratio) {
     # z score normalisation per window
     dt[, N := (N - mean(N)) / sd(N), by = wind]
   }
-  # min max normalisation, move to [0,1]. The minimum is moved to 0.1 to increase the contrast at low N
-  dt[, N := (((N-min(N)) / (max(N)-min(N))) / 1.11) + 0.1, by = wind]
+  # min max normalisation, move to [0,1]. The minimum is moved to 0.05 to increase the contrast at low N
+  dt[, N := (((N-min(N)) / (max(N)-min(N))) / 1.05) + 0.05, by = wind]
 
   return(dt)
 }
 
-get_normalised_pixel_values_simple <- function(dt, use_log = F) {
+get_normalised_pixel_values_simple <- function(dt) {
 
   # get N for each pixel
   dt <- dt[, .N, by = c('x', 'y')]
-  if (use_log)
-    dt[, N := log(N + 0.0000000001)]
-  else
-    dt[, N := as.numeric(N)]
+  # increase the contrast between "small N" and 0
+  dt[N >= 1, N := N + 1]
 
-  dt[, N := (N-min(N)) / (max(N)-min(N)), ]
+  # min max normalization on the log scale
+  dt[, N := log(N + 0.0000000001)]
+  dt[, N := (((N-min(N)) / (max(N)-min(N))) / 1.05) + 0.05, ]
 
   return(dt)
 }
