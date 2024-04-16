@@ -17,8 +17,9 @@
 #' @import data.table
 
 save_pngs_dataset <- function(root, cnvs, samps, snps, shrink_lrr = 0.2, flip_chance = 0.5,
-                              noise_chance = 0, noise_lvl = 0.1) {
-  if (dir.exists(root)) stop('Root folder already exists. Delete existing folder or provide a different path')
+                              noise_chance = 0, noise_lvl = 0.1,
+                              simple_min_max = F, use_log = F) {
+  if (dir.exists(root)) warning('Root folder already exists!')
 
   dir.create(root)
   dir.create(paste0(root, '/true_del')); dir.create(paste0(root, '/true_dup'))
@@ -45,33 +46,35 @@ save_pngs_dataset <- function(root, cnvs, samps, snps, shrink_lrr = 0.2, flip_ch
                                              '_st', a$start, '.png')
     }
 
-    dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
-                   shrink_lrr = shrink_lrr)
+    if (!file.exists(pt)) {
+      dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
+                     shrink_lrr = shrink_lrr, simple_min_max = simple_min_max, use_log = use_log)
 
-    if (nrow(dt) == 0) {
-      warning('no image saved for cnv: ', a)
-      return(data.table())
-    }
-
-    imager::save.image(imager::as.cimg(dt), pt)
-
-    # Data augmentation 1, image flipping
-    if (runif(1) <= flip_chance) {
-      dt[, x := abs(x-(max(x)+1))] # flip the x axis
-      pt <- gsub('\\.png', '_flip\\.png', pt)
-
-    # Data augmentation 2, add some random noise
-    if (runif(1) <= noise_chance) {
-      nv <- rnorm(w*w, sd = 0.3) * noise_lvl
-      dt[, value := value + nv]
-      pt <- gsub('\\.png', '_noised\\.png', pt)
-    }
+      if (nrow(dt) == 0) {
+        warning('no image saved for cnv: ', a)
+        return(data.table())
+      }
 
       imager::save.image(imager::as.cimg(dt), pt)
-    }
 
-    # to be tested, might be unstable when called by multiple workers
-    if (x %% 100 == 0) gc()
+      # Data augmentation 1, image flipping
+      if (runif(1) <= flip_chance) {
+        dt[, x := abs(x-(max(x)+1))] # flip the x axis
+        pt <- gsub('\\.png', '_flip\\.png', pt)
+
+      # Data augmentation 2, add some random noise
+      if (runif(1) <= noise_chance) {
+        nv <- rnorm(w*w, sd = 0.3) * noise_lvl
+        dt[, value := value + nv]
+        pt <- gsub('\\.png', '_noised\\.png', pt)
+      }
+
+        imager::save.image(imager::as.cimg(dt), pt)
+      }
+
+      # to be tested, might be unstable when called by multiple workers
+      if (x %% 100 == 0) gc()
+    }
   }
 
   # save images using BiocParallel

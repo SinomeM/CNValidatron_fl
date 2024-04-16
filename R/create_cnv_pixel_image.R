@@ -22,6 +22,7 @@
 
 plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
                      tmp_plot = 0, min_lrr = -1.4, max_lrr = 1.3,
+                     simple_min_max = F, use_log = F,
                      # the following parameters should not be changed by most users
                      shrink_lrr = 0.1, w = 96, z = 4, k1 = 31, k2 = 26,
                      l_wind = 20000000, # top row Mbp
@@ -124,9 +125,16 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
 
 
   # create the pixel map
-  dt_lrr <- get_normalised_pixel_values(dt_lrr, w, in_out_ratio)
-  dt_baf <- get_normalised_pixel_values(dt_baf, w, in_out_ratio)
-  dt_big <- get_normalised_pixel_values(dt_big, w, in_out_ratio)
+  if (simple_min_max) {
+    dt_lrr <- get_normalised_pixel_values_simple(dt_lrr, use_log)
+    dt_baf <- get_normalised_pixel_values_simple(dt_baf, use_log)
+    dt_big <- get_normalised_pixel_values_simple(dt_big, use_log)
+  }
+  else {
+    dt_lrr <- get_normalised_pixel_values(dt_lrr, w, in_out_ratio)
+    dt_baf <- get_normalised_pixel_values(dt_baf, w, in_out_ratio)
+    dt_big <- get_normalised_pixel_values(dt_big, w, in_out_ratio)
+  }
 
 
   # create the full picture
@@ -186,11 +194,14 @@ get_normalised_pixel_values <- function(dt, w, in_out_ratio) {
   return(dt)
 }
 
-get_normalised_pixel_values_simple <- function(dt) {
+get_normalised_pixel_values_simple <- function(dt, use_log = F) {
 
   # get N for each pixel
   dt <- dt[, .N, by = c('x', 'y')]
-  dt[, N := as.numeric(N)]
+  if (use_log)
+    dt[, N := log(N + 0.0000000001)]
+  else
+    dt[, N := as.numeric(N)]
 
   dt[, N := (N-min(N)) / (max(N)-min(N)), ]
 
