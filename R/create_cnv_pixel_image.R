@@ -22,7 +22,7 @@
 
 plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
                      tmp_plot = 0, min_lrr = -1.4, max_lrr = 1.3,
-                     simple_min_max = F, use_log = F,
+                     simple_min_max = F, use_log = F, blank_small = F,
                      # the following parameters should not be changed by most users
                      shrink_lrr = 0.1, w = 96, z = 4, k1 = 31, k2 = 26,
                      l_wind = 20000000, # top row Mbp
@@ -52,6 +52,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
     return(data.table())
   }
 
+  n_real_snps <- dt[between(position, cnv$start, cnv$end), .N]
 
   # bottom and middle row, move position to the x coordinates in the new system
   # dt <- dt[between(position, ss, ee), ] # already done in load_snps_tbx()
@@ -136,6 +137,15 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
     dt_big <- get_normalised_pixel_values(dt_big, w, in_out_ratio)
   }
 
+  if (blank_small) {
+    dt_bf <- dt_lrr[x %in% 47:50, ]
+    # here we are already in normalised pixel intensities
+    if (dt_lrr[N >= 0, .N] < some_number)
+      message('there are very few point available for the CNVs')
+    # consider exuding the call, e.g. make the PNG blank and train the model
+    # to call blank images as "too small"
+  }
+
 
   # create the full picture
   dt <- as.data.table(rbind(t(combn(1:w, 2)), t((combn(w:1, 2))))) # almost all combinations
@@ -164,7 +174,8 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
 
   dt[, y := abs(y-(max(y)+1))] # to deal with how imager use the y axis
 
-  return(dt)
+
+  return(list(dt, n_real_snps))
 
 }
 

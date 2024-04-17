@@ -23,13 +23,15 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
   FUN <- function(x) {
     a <- cnvs[x]
 
-    pt <- paste0(root, '/new/samp', a$sample_ID, '_st', a$start, '.png')
-
-    if (!file.exists(pt)) {
-
       dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
                      shrink_lrr = shrink_lrr, simple_min_max = simple_min_max)
+      n_real_snps <- dt[[2]]
+      dt <- dt[[1]]
 
+    pt <- paste0(root, '/new/samp', a$sample_ID, '_st', a$start,
+                 '_nsnp', n_real_snps, '.png')
+
+    if (!file.exists(pt)) {
       if (nrow(dt) == 0) {
         warning('no image saved for cnv: ', a)
         return(data.table())
