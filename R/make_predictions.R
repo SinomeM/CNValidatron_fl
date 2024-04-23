@@ -44,14 +44,18 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F) {
   colnames(pred_probs) <- c('p_false', 'p_true_del', 'p_true_dup', 'p_unk_del', 'p_unk_dup')
   pred_dt <- cbind(pred_dt, pred_probs)
 
-  pred_dt[, sample_ID := gsub('.+new/', '', ix)][,
-            start := gsub('\\d+_', '', sample_ID)][,
-            start := as.integer(gsub('.png', '', start))][,
-            sample_ID := as.integer(gsub('_\\w+.png', '', sample_ID))][,
-            ix := NULL]
+  pred_dt[, sample_ID := gsub('samp\\w+', '', ix)][,
+            sample_ID := as.character(gsub('_.+', '', sample_ID))][,
+            start := gsub('_st\\d+', '', ix)][,
+            start := as.integer(gsub('_st', '', start))][,
+            real_numsnp := gsub('nsnp\\w+', '', ix)][,
+            real_numsnp := as.integer(gsub('nsnp', '', real_numsnp))]
 
   if (return_pred_dt)
     returt(pred_dt)
+
+  pred_dt[, ix := NULL]
+  cnvs[, ':=' (sample_ID = as.character(sample_ID), start = as.integer(start))]
 
   pred_dt <- merge(pred_dt, cnvs[, .(sample_ID, chr, start, end, numsnp,
                                 length, conf, GT, CN)],
