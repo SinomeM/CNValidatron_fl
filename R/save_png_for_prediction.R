@@ -14,7 +14,7 @@
 #' @import data.table
 
 save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
-                                 simple_min_max = F) {
+                                 simple_min_max = F, no_parall = F) {
   if (dir.exists(root)) warning('Root folder already exists!')
 
   dir.create(root)
@@ -44,7 +44,8 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
     if (x %% 100 == 0) gc()
   }
 
+  if (no_parall)  null <- lapply(1:nrow(cnvs), FUN)
+  else null <- BiocParallel::bplapply(1:nrow(cnvs), FUN)
   # save images using BiocParallel
-  null <- BiocParallel::bplapply(1:nrow(cnvs), FUN)
 
 }
