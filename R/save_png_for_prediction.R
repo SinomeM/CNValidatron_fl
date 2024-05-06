@@ -31,7 +31,7 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
     n_real_snps <- dt[[2]]
     dt <- dt[[1]]
 
-    pt <- paste0(root, '/new/batch', batch, '/samp', a$sample_ID, '_st', a$start,
+    pt <- paste0(root, '/new/batch', a$batch, '/samp', a$sample_ID, '_st', a$start,
                  '_nsnp', n_real_snps, '.png')
 
     #if (!file.exists(pt)) {
