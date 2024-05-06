@@ -12,7 +12,16 @@ plot_cnv(
   tmp_plot = 0,
   min_lrr = -1.4,
   max_lrr = 1.3,
-  shrink_lrr = NULL
+  simple_min_max = F,
+  use_log = F,
+  blank_small = F,
+  shrink_lrr = 0.1,
+  w = 96,
+  z = 4,
+  k1 = 31,
+  k2 = 26,
+  l_wind = 2e+07,
+  mx_lr = 2
 )
 }
 \arguments{

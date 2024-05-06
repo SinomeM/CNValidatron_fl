@@ -11,14 +11,15 @@ save_pngs_dataset(
   snps,
   shrink_lrr = 0.2,
   flip_chance = 0.5,
-  noise_chance = 0.15,
-  noise_lvl = 0.1
+  noise_chance = 0,
+  noise_lvl = 0.1,
+  simple_min_max = F
 )
 }
 \arguments{
 \item{root}{root folder for the dataset. Must not exists.}
 
-\item{cnvs}{cnv data.table in the usual format plus the column 'Visual_Output'}
+\item{cnvs}{cnv data.table in the usual format plus the column 'vo'}
 
 \item{samps}{sample list in usual format}
 
