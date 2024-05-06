@@ -20,7 +20,7 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
   dir.create(root)
   dir.create(paste0(root, '/new'))
 
-  if (!'batch' %in% colnames(cnvs)) cnvs[, batch := sample(a:batches, .N)]
+  if (!'batch' %in% colnames(cnvs)) cnvs[, batch := sample(a:batches, .N, replace = T)]
   for (i in 1:batches) dir.create(paste0(root, '/new/batch', i), showWarnings = F)
 
   FUN <- function(x) {
