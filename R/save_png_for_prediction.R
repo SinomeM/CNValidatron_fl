@@ -14,33 +14,35 @@
 #' @import data.table
 
 save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
-                                 simple_min_max = F, no_parall = F) {
+                                 simple_min_max = F, no_parall = F, batches = 1000) {
   if (dir.exists(root)) warning('Root folder already exists!')
 
   dir.create(root)
   dir.create(paste0(root, '/new'))
 
+  if (!'batch' %in% colnames(cnvs)) cnvs[, batch := sample(a:batches, .N)]
+  for (i in 1:batches) dir.create(paste0(root, '/new/batch', i), showWarnings = F)
+
   FUN <- function(x) {
     a <- cnvs[x]
 
-      dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
-                     shrink_lrr = shrink_lrr, simple_min_max = simple_min_max)
-      n_real_snps <- dt[[2]]
-      dt <- dt[[1]]
+    dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
+                   shrink_lrr = shrink_lrr, simple_min_max = simple_min_max)
+    n_real_snps <- dt[[2]]
+    dt <- dt[[1]]
 
-    pt <- paste0(root, '/new/samp', a$sample_ID, '_st', a$start,
+    pt <- paste0(root, '/new/batch', batch, '/samp', a$sample_ID, '_st', a$start,
                  '_nsnp', n_real_snps, '.png')
 
-    if (!file.exists(pt)) {
-      if (nrow(dt) == 0) {
-        warning('no image saved for cnv: ', a)
-        return(data.table())
-      }
+    #if (!file.exists(pt)) {
+    #  if (nrow(dt) == 0) {
+    #    warning('no image saved for cnv: ', a)
+    #    return(data.table())
+    #}
 
-      imager::save.image(imager::as.cimg(dt), pt)
-    }
+    imager::save.image(imager::as.cimg(dt), pt)
+    #}
 
-    # to be tested, might be unstable when called by multiple workers
     if (x %% 100 == 0) gc()
   }
 
