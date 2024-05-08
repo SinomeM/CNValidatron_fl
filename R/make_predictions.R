@@ -21,10 +21,11 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F, batches = 10
 
   dt_rbind <- data.table()
 
-  for (i in 1:batches) {
-    message(paste0('Batch ', i, ' of ', batches))
+  for (bb in 1:batches) {
+    message(paste0('Batch ', bb, ' of ', batches))
+    pt <- paste0(root, '/batch', bb, '/')
 
-    pred_dt <- image_folder_dataset(root, transform = . %>% transform_to_tensor())
+    pred_dt <- image_folder_dataset(pt, transform = . %>% transform_to_tensor())
     # the output is raw logits
     pred_tens <- predict(model, pred_dt)
     # convert to probabilities
@@ -34,8 +35,6 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F, batches = 10
     # false:   1
     # tru_del: 3
     # tru_dup: 3
-    # unk_del: 4
-    # unk_dup: 5
 
     pred_ix <- as.matrix(torch_argmax(pred_tens, dim = 2))[, 1]
     pred_probs <- round(as.matrix(pred_tens), 3)
