@@ -52,7 +52,7 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F, batches = 10
             real_numsnp := as.integer(gsub('\\.png', '', real_numsnp))]
 
   if (return_pred_dt)
-    returt(pred_dt)
+    return(pred_dt)
 
   pred_dt[, ix := NULL]
   cnvs[, ':=' (sample_ID = as.character(sample_ID), start = as.integer(start))]
@@ -61,5 +61,5 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F, batches = 10
                                 length, conf, GT, CN)],
                    by = c('sample_ID', 'start'))
 
-  returt(pred_dt)
+  return(pred_dt)
 }
