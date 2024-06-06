@@ -22,7 +22,8 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F, batches = 10
   pred_dt_rbind <- data.table()
 
   for (i in 1:batches) {
-    pred_dt <- image_folder_dataset(paste0(root, 'batch', i, '/'), transform = . %>% transform_to_tensor())
+    bpt <- paste0(root, '/batch', i, '/')
+    pred_dt <- image_folder_dataset(bpt, transform = . %>% transform_to_tensor())
     # the output is raw logits
     pred_tens <- predict(model, pred_dt)
     # convert to probabilities
