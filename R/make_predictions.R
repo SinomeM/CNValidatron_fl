@@ -17,12 +17,14 @@
 #' @import luz
 #' @import torch
 
-make_predictions <- function(model, root, cnvs, return_pred_dt = F, batches = 1000) {
+make_predictions <- function(model, root, cnvs, return_pred_dt = F, batches = 1:1000) {
 
   pred_dt_rbind <- data.table()
 
-  for (i in 1:batches) {
+  for (i in batches) {
+    message(i)
     bpt <- paste0(root, '/batch', i, '/')
+    if (!dir.exists(bpt)) next
     pred_dt <- image_folder_dataset(bpt, transform = . %>% transform_to_tensor())
     # the output is raw logits
     pred_tens <- predict(model, pred_dt)
