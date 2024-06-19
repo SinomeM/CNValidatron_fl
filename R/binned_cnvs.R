@@ -23,7 +23,7 @@ binned_cnvs <- function(cnvs, format = c('long', 'count', 'wide', 'both'),
   if (format == 'long') return(dto)
   # add the count table, one line per "variant"
   if (format == 'count')
-    return(list(dto, dto[!is.na(chr), ][, .N, by = c('chr', 'start', 'end', 'GT')]))
+    return(list(dto, dto[!is.na(chr), ][, .N, by = c('ix', 'chr', 'start', 'end', 'GT')]))
 
   # create the table in the wide format, one column per sample
   dtow <- dcast(dto, ix + chr + start + end ~ sample_ID, value.var = 'GT')
