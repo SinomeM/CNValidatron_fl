@@ -44,5 +44,8 @@ binned_genome <- function(chrs_sten = QCtreeCNV::hg19_start_end_centromeres,
     tmp[end > lims[2], end := lims[2]]
     dt <- rbind(dt, tmp)
   }
+
+  setorder(dt, chr, start)
+  dt[, ix := 1:.N]
   return(dt)
 }
