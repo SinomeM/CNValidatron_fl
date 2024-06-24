@@ -21,7 +21,8 @@
 
 cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
                       leiden_res = 1, plots_path = NA, min_n = 20,
-                      max_force_merge_rounds = 5, force_merge_min_overlap = 0.75) {
+                      max_force_merge_rounds = 5, force_merge_min_overlap = 0.75,
+                      arms_save_plots = c('2p', '16p', '15q', '19p')) {
 
   cnvs[, center := round(start + (end-start+1)/2)]
   cnvs_with_CNVR <- data.table()
@@ -74,7 +75,8 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       cnvs_with_CNVR <- rbind(cnvs_with_CNVR, dt)
       cnvrs <- rbind(cnvrs, dt_r)
 
-      if (!is.na(plots_path) & dt[, .N] > 10) save_igraph_plot(plots_path, ig[[1]], ig[[2]], ii, cc$arm_ID)
+      if (!is.na(plots_path) & dt[, .N] > 10 & cc$arm %in% arms_save_plots)
+        save_igraph_plot(plots_path, ig[[1]], ig[[2]], ii, cc$arm_ID)
       gc()
     }
   }
