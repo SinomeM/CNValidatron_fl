@@ -21,7 +21,7 @@
 
 cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
                       leiden_res = 1, plots_path = NA, min_n = 20,
-                      max_force_merge_rounds = 5) {
+                      max_force_merge_rounds = 5, force_merge_min_overlap = 0.75) {
 
   cnvs[, center := round(start + (end-start+1)/2)]
   cnvs_with_CNVR <- data.table()
@@ -66,7 +66,7 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       dt <- rbind(dt1, dt2); dt_r <- rbind(dt_r1, dt_r2)
 
       # Check for overlapping CNVRs and merge them
-      out <- force_cnvr_merge(dt, dt_r)
+      out <- force_cnvr_merge(dt, dt_r, min_overlap = force_merge_min_overlap)
       dt <- out[[1]]
       dt_r <- out[[2]]
 
@@ -81,7 +81,7 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
 
   for (i in 1:max_force_merge_rounds) {
     message('Final CNVRs merging round ', i, ' out of ', max_force_merge_rounds)
-    dt <- force_cnvr_merge(cnvs_with_CNVR, cnvrs, verbose = T)
+    dt <- force_cnvr_merge(cnvs_with_CNVR, cnvrs, verbose = T, min_overlap = force_merge_min_overlap)
     cnvs_with_CNVR <- dt[[1]]
     cnvrs <- dt[[2]]
   }
@@ -190,7 +190,7 @@ create_cnvrs <- function(dt) {
   return(dt_r)
 }
 
-force_cnvr_merge <- function(cnvs, cnvrs, verbose = F) {
+force_cnvr_merge <- function(cnvs, cnvrs, verbose = F, min_overlap = 0.75) {
 
   if (cnvs[CNVR %in% cnvrs[, CNVR], .N] != cnvs[, .N])
     stop('Some CNVs are assigned to missing CNVRs')
@@ -216,7 +216,7 @@ force_cnvr_merge <- function(cnvs, cnvrs, verbose = F) {
 
       # reciprocal overlap 0.75
       dt_r[, overlap := pmin(a$end, end) - pmax(a$start, start)]
-      b <- dt_r[overlap >= 0.75*a$length & overlap >= 0.75*length, ]
+      b <- dt_r[overlap >= min_overlap*a$length & overlap >= min_overlap*length, ]
       # skip if the only match is itself
       if (b[, .N] == 1) next
 
