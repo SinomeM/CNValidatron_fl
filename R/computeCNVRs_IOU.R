@@ -174,9 +174,9 @@ get_igraph_objs <- function(dt, min_iou, leiden_res, ii, arm, type = '') {
 
 save_igraph_plot <- function(plots_path, g, gr, ii) {
   colors <- rainbow(max(membership(gr)))
-  pl <- plot(g, vertex.color = colors[membership(gr)],
-             layout = layout_nicely, vertex.size = 5, vertex.label.cex = 0.3, arrow.mode = 0)
-  ggsave(pl, paste0(plots_path, '/', cc$arm_ID, '_', ii, '.png'))
+  ggsave(plot(g, vertex.color = colors[membership(gr)],
+             layout = layout_nicely, vertex.size = 5, vertex.label.cex = 0.3, arrow.mode = 0),
+         paste0(plots_path, '/', cc$arm_ID, '_', ii, '.pdf'))
 }
 
 create_cnvrs <- function(dt) {
