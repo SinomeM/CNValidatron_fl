@@ -190,6 +190,7 @@ create_cnvrs <- function(dt) {
   for (cr in dt[, unique(CNVR)]) {
     a <- dt[CNVR == cr, ]
     dt_r <- rbind(dt_r, data.table(CNVR = cr, chr = a[1, chr],
+                                   numsnp = a[, round(median(numsnp))],
                                    start = a[, round(median(start))],
                                    end = a[, round(median(end))], n = a[, .N]))
   }
