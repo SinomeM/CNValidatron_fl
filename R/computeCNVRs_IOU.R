@@ -74,7 +74,7 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
       cnvs_with_CNVR <- rbind(cnvs_with_CNVR, dt)
       cnvrs <- rbind(cnvrs, dt_r)
 
-      if (!is.na(plots_path)) save_igraph_plot(plots_path, ig[[1]], ig[[2]], ii)
+      if (!is.na(plots_path) & dt[, .N] > 10) save_igraph_plot(plots_path, ig[[1]], ig[[2]], ii, cc$arm_ID)
       gc()
     }
   }
@@ -172,11 +172,15 @@ get_igraph_objs <- function(dt, min_iou, leiden_res, ii, arm, type = '') {
   return(list(g, gr, dt_r))
 }
 
-save_igraph_plot <- function(plots_path, g, gr, ii) {
+save_igraph_plot <- function(plots_path, g, gr, ii, arm) {
   colors <- rainbow(max(membership(gr)))
-  ggsave(plot(g, vertex.color = colors[membership(gr)],
-             layout = layout_nicely, vertex.size = 5, vertex.label.cex = 0.3, arrow.mode = 0),
-         paste0(plots_path, '/', cc$arm_ID, '_', ii, '.pdf'))
+  pdf(file = paste0(plots_path, '/', arm, '_', ii, '.pdf'), width = 8, height = 6)
+  plot(g, vertex.color = colors[membership(gr)],
+       layout = layout_nicely, vertex.size = 7, vertex.label.cex = 0.3, arrow.mode = 0)
+  dev.off()
+  #ggsave(paste0(plots_path, '/', arm, '_', ii, '.pdf'),
+  #       plot(g, vertex.color = colors[membership(gr)],
+  #           layout = layout_nicely, vertex.size = 5, vertex.label.cex = 0.3, arrow.mode = 0))
 }
 
 create_cnvrs <- function(dt) {
