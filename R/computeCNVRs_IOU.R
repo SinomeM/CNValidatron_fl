@@ -151,7 +151,9 @@ get_igraph_objs <- function(dt, min_iou, leiden_res, ii, arm, type = '') {
   dt_m <- dt[!cix %in% dt_g[, unique(c(cnvA, cnvB))], ]
 
   # create the igraph network
-  g <- graph_from_data_frame(dt_g[, .(cnvA, cnvB)], directed = F)
+  dt_g <- dt_g[, .(cnvA, cnvB, iou)]
+  colnames(dt_g) <- c('a', 'b', 'weight')
+  g <- graph_from_data_frame(dt_g, directed = F)
   gr <- cluster_leiden(g, resolution_parameter = leiden_res)
   a <- membership(gr)
   a <- data.table(cix = as.integer(names(a)), gr = a)
@@ -181,11 +183,55 @@ create_cnvrs <- function(dt) {
   dt_r <- data.table()
   for (cr in dt[, unique(CNVR)]) {
     a <- dt[CNVR == cr, ]
-    dt_r <- rbind(dt_r, data.table(CNVR = cr, chr = a[1, chr], start = a[, round(median(start))], end = a[, round(median(end))], n = a[, .N]))
+    dt_r <- rbind(dt_r, data.table(CNVR = cr, chr = a[1, chr],
+                                   start = a[, round(median(start))],
+                                   end = a[, round(median(end))], n = a[, .N]))
   }
   return(dt_r)
 }
 
+force_cnvr_merge <- function(cnvs, cnvrs, verbose = F) {
+
+  if (cnvs[CNVR %in% cnvrs[, CNVR], .N] != cnvs[, .N])
+    stop('Some CNVs are assigned to missing CNVRs')
+  if (cnvrs[CNVR %in% cnvs[, CNVR], .N] != cnvrs[, .N])
+    stop('Some CNVRs are assigned to missing CNVs')
+
+  cnvs[, length := end - start + 1]
+  cnvrs[, length := end - start + 1]
+
+  # run by chromosome
+  for (i in cnvrs[, unique(chr)]) {
+    if (verbose) message('Chr ', i)
+    # cnvs and cnvrs per chr
+    dt <- cnvs[chr == i, ]
+    dt_r <- cnvrs[chr == i, ]
+    setorder(dt_r, start)
+    dt_r[, skip := F]
+    # check each cnvr
+    for (ii in 1:dt_r[, .N]) {
+      a <- dt_r[ii]
+      # skip if already merged
+      if (a[, skip]) next
+
+      # reciprocal overlap 0.75
+      dt_r[, overlap := pmin(a$end, end) - pmax(a$start, start)]
+      b <- dt_r[overlap >= 0.75*a$length & overlap >= 0.75*length, ]
+      # skip if the only match is itself
+      if (b[, .N] == 1) next
+
+      dt_r[CNVR %in% b[, CNVR], skip := T]
+      # update CNVs of to be merged CNVRs
+      cnvs[CNVR %in% b[, CNVR], CNVR := a[, paste0(CNVR, '_fmrg')]]
+    }
+  }
+
+  # recreate CNVRs from updated CNVs
+  cnvrs <- CNValidatron:::create_cnvrs(cnvs)
+  return(list(cnvs, cnvrs))
+}
+
+# not used at the moment
 merge_cnvrs <- function(cnvrs, cnvs, min_iou, leiden_res, arm, ii) {
 
   # compute iou between all pairs of overlapping CNVRs
@@ -228,45 +274,5 @@ merge_cnvrs <- function(cnvrs, cnvs, min_iou, leiden_res, arm, ii) {
   # recreate CNVRs table is from updated CNVs table
   cnvrs <- create_cnvrs(cnvs)
 
-  return(list(cnvs, cnvrs))
-}
-
-force_cnvr_merge <- function(cnvs, cnvrs, verbose = F) {
-
-  if (cnvs[CNVR %in% cnvrs[, CNVR], .N] != cnvs[, .N])
-    stop('Some CNVs are assigned to missing CNVRs')
-  if (cnvrs[CNVR %in% cnvs[, CNVR], .N] != cnvrs[, .N])
-    stop('Some CNVRs are assigned to missing CNVs')
-
-  cnvs[, length := end - start + 1]
-  cnvrs[, length := end - start + 1]
-
-  # run by chromosome
-  for (i in cnvrs[, unique(chr)]) {
-    if (verbose) message('Chr ', i)
-    # cnvs and cnvrs per chr
-    dt <- cnvs[chr == i, ]
-    dt_r <- cnvrs[chr == i, ]
-    setorder(dt_r, start)
-    dt_r[, skip := F]
-    # check each cnvr
-    for (ii in 1:dt_r[, .N]) {
-      a <- dt_r[ii]
-      # skip if already merged
-      if (a[, skip]) next
-
-      # reciprocal overlap 0.75
-      dt_r[, overlap := pmin(a$end, end) - pmax(a$start, start)]
-      b <- dt_r[overlap >= 0.75*a$length & overlap >= 0.75*length, ]
-      # skip if the only match is itself
-      if (b[, .N] == 1) next
-
-      # update CNVs of to be merged CNVRs
-      cnvs[CNVR %in% b[, CNVR], CNVR := a[, paste0(CNVR, '_fmrg')]]
-    }
-  }
-
-  # recreate CNVRs from updated CNVs
-  cnvrs <- CNValidatron:::create_cnvrs(cnvs)
   return(list(cnvs, cnvrs))
 }
