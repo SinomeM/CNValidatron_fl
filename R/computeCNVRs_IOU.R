@@ -81,6 +81,8 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
     }
   }
 
+  if (max_force_merge_rounds == 0) return(list(cnvs_with_CNVR, cnvrs))
+  
   for (i in 1:max_force_merge_rounds) {
     message('Final CNVRs merging round ', i, ' out of ', max_force_merge_rounds)
     dt <- force_cnvr_merge(cnvs_with_CNVR, cnvrs, verbose = T, min_overlap = force_merge_min_overlap)
