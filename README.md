@@ -16,7 +16,7 @@ You might want to install them manually beforehand.
 
 ## Citation
 
-If you use this sofware plese cite the following publications:
+If you use this software please cite the following publications:
 
 - Regarding CNV data handling and generation:
   https://currentprotocols.onlinelibrary.wiley.com/doi/10.1002/cpz1.621
@@ -29,11 +29,11 @@ If you use this sofware plese cite the following publications:
 To perform the validation of a set of CNVs you will need the following files:
 
 - tabix indexed intensity file for each sample
-- SNPs file (preferibly filtered)
+- SNPs file (preferably filtered)
 - samples file (linking each sample to an intensity file)
 - CNVs table
 
-In general you will need all the files descirbed in the CNV calling protocol
+In general you will need all the files described in the CNV calling protocol
 mentioned above (Montalbano et al., 2022, Current Protocol).
 If you are interested in genome wide CNVs rather than in specific
 loci, you can just skip that section of the protocol.
@@ -53,7 +53,7 @@ png_pt <- '/path/to/folder'
 # set BiocParall parallel worker limit
 BiocParallel::register(BiocParallel::MulticoreParam(workers=2))
 
-# save the PNGs for all CNVs  
+# save the PNGs for all CNVs
 save_pngs_prediction(pred_pt, cnvs, samples, snps)
 
 # run the prediction algoritm
@@ -71,6 +71,7 @@ true_cnvs <- pred[pred %in% 2:3 & pred_prob >= 0.75, ]
 
 Notice that at the moment the sample_ID is used in the PNGs file name,
 thus is best to not have special character in it (especially '/').
+
 
 ## How to train your on model
 
