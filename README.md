@@ -99,6 +99,13 @@ In the base case (CNVs but in a very different dataset),
 train a new custom model is fairly easy
 assuming you already have a relatively big set of validated examples.
 
+**NB**: This assumes you have a set of validated CNVs in
+the following three classes: false, true deletion, true duplication.
+The format should be the same as the described here
+https://github.com/SinomeM/shinyCNV. That is column `vo`
+for the human evaluation results (1: true, 2: false, 3: unknown)
+and column `GT` for genotype (1: deletions, 2: duplications).
+
 ```
 # set BiocParall workers (for PNG generation)
 options(MulticoreParam = MulticoreParam(workers = 16))
@@ -166,9 +173,14 @@ luz_save(fitted_dropout_5_10,
 
 ### Other cases
 
+If you want to use a different number of classes you need to change
+at least the model definition in `R/.cnn_model.R`.
+
 If you use case needs a different image, more/less pixels, different
 set of tracks, different zoom etc, you might need to fork the repo
-and change the function `plot_cnv()`. Feel free to contact me
+and change the function `plot_cnv()`.
+
+In general for any complex use case, feel free to contact me
 if that's the case and I'll see what I can do.
 
 Unfortunately at the moment fine tuning of a pre-trained model
@@ -186,4 +198,7 @@ The model described in the paper above is available upon request.
 Feel free to open an issue here on GitHub.
 For collaboration and big extensions of the program, contact the
 corresponding author in one of the mentioned papers.
+
+Keep in mind I'm not a programmer and my main interest is
+applying methods to do new research so be patient ;)
 
