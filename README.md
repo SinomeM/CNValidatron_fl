@@ -21,7 +21,7 @@ If you use this software please cite the following publications:
 - Regarding CNV data handling and generation:
   https://currentprotocols.onlinelibrary.wiley.com/doi/10.1002/cpz1.621
 - Regarding the actual model:
-  insert_here
+  https://www.biorxiv.org/content/10.1101/2024.09.09.612035v1
 
 
 ## How to run
