@@ -56,3 +56,15 @@ quick_assoc <- function(markers, pheno, test = 'fisher') {
   }
   return(out)
 }
+
+
+exclude_fixed_loci <- function(assoc_res, loci, boundary = 200000) {
+
+  dt_f <- data.table()
+  for (i in 1:loci[,.N]) {
+    loc <- loci[i]
+    dt_f <- rbind(dt_f, assoc_res[chr == loc$chr & start <= loc$end & end >= loc$start, ])
+  }
+  dt_no_f <- fsetdiff(assoc_res, dt_f)
+  return(list(dt_f, dt_no_f))
+}
