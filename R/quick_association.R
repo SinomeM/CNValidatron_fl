@@ -158,7 +158,7 @@ run_assoc_logistic <- function(markers, scan_res, pheno, padj = F,
     tmp <- cbind(rownames(pt), as.data.table(pt))
     colnames(tmp) <- c('var', 'log_OR', 'SE', 'Z', 'pval')
     if (n_del >= 5)
-      res <- rbind(res, data.table(marker_ID = mm, GT = 1, n<-car = n_del,
+      res <- rbind(res, data.table(marker_ID = mm, GT = 1, n_car = n_del,
                                    log_OR = signif(tmp[var == 'var1', log_OR], 3),
                                    SE = signif(tmp[var == 'var1', SE], 3),
                                    pval = signif(tmp[var == 'var1', pval], 3)))
