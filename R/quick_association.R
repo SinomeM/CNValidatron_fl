@@ -141,9 +141,9 @@ run_assoc_logistic <- function(markers, scan_res, pheno, padj = F,
 
     # pheno file for the marker
     tmp <- pheno[, .(sample_ID, pheno, age, gender)]
-    if (n_del < min_carriers)
+    if (n_del >= min_carriers)
       tmp[sample_ID %in% dtm[GT == 1, sample_ID], var := 1]
-    if (n_dup < min_carriers)
+    if (n_dup >= min_carriers)
       tmp[sample_ID %in% dtm[GT == 2, sample_ID], var := 2]
     tmp[is.na(var), var := 0]
 
