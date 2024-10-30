@@ -146,6 +146,7 @@ run_assoc_logistic <- function(markers, scan_res, pheno, padj = F,
     if (n_dup >= min_carriers)
       tmp[sample_ID %in% dtm[GT == 2, sample_ID], var := 2]
     tmp[is.na(var), var := 0]
+    tmp[, var := as.factor(var)]
 
     # HERE DUP carriers will be treated as controls if the DEL has
     # more than 5 but the DUP not. In GDK is done differently
