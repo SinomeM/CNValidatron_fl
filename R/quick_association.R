@@ -164,7 +164,7 @@ run_assoc_logistic <- function(markers, scan_res, pheno, padj = F,
                                    SE = signif(tmp[var == 'var1', SE], 3),
                                    pval = signif(tmp[var == 'var1', pval], 3)))
     if (n_dup >= 5)
-      res <- rbind(res, data.table(marker_ID = mm, GT = 2, n_car = n_del,
+      res <- rbind(res, data.table(marker_ID = mm, GT = 2, n_car = n_dup,
                                    log_OR = signif(tmp[var == 'var2', log_OR], 3),
                                    SE = signif(tmp[var == 'var2', SE], 3),
                                    pval = signif(tmp[var == 'var2', pval], 3)))
