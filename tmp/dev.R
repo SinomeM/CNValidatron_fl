@@ -62,3 +62,17 @@ if (F) {
   }
 }
 
+# test CNVRs
+if (F) {
+  library(data.table)
+  devtools::load_all()
+  cnvs <- fread('../../UKB_GW_CNVs/cnvs_pred.txt')[pred %in% 2:3 & pred_prob >= 0.9, ]
+
+  chr_arms <- copy(QCtreeCNV::hg19_chr_arms)
+  chr_st_en <- copy(QCtreeCNV::hg19_start_end_centromeres)
+
+  dir.create('./rds')
+
+  cnvrs <- cnvrs_iou(cnvs, chr_arms, min_iou = 0.6,
+                     max_force_merge_rounds = 4, force_merge_min_overlap = 0.75)
+}
