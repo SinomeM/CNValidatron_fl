@@ -82,7 +82,7 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
   }
 
   if (max_force_merge_rounds == 0) return(list(cnvs_with_CNVR, cnvrs))
-  
+
   for (i in 1:max_force_merge_rounds) {
     message('Final CNVRs merging round ', i, ' out of ', max_force_merge_rounds)
     dt <- force_cnvr_merge(cnvs_with_CNVR, cnvrs, verbose = T, min_overlap = force_merge_min_overlap)
@@ -129,6 +129,15 @@ create_splits_foverlaps <- function(cnvs_arm, cc, screen_size = 500) {
   colnames(splits) <- c('start', 'ix')
   # start of of following is the end of previous, this result in .N-1 splits
   splits <- splits[1:(.N-1),][, end := (splits$start[-1]) - 1]
+  # add back the first split (from chr arm start), if necessary
+  if (splits[1][, start] > cc$start)
+    splits <- rbind(data.table(start = cc$start, ix = 0, end = splits[1][, start - 1]),
+                    splits)
+  # add back the last split (from chr arm start), if necessary
+  if (splits[.N][, end] < cc$end)
+    splits <- rbind(data.table(start = splits[.N][, end + 1], ix = 0, end = cc$end),
+                    splits)
+
   message(nrow(splits), ' different possible networks detected in ', nrow(cnvs_arm), ' CNVs')
 
   return(splits)

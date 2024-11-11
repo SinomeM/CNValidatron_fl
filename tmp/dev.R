@@ -66,13 +66,23 @@ if (F) {
 if (F) {
   library(data.table)
   devtools::load_all()
-  cnvs <- fread('../../UKB_GW_CNVs/cnvs_pred.txt')[pred %in% 2:3 & pred_prob >= 0.9, ]
+  # cnvs <- fread('../../UKB_GW_CNVs/cnvs_with_preds.txt')[pred %in% 2:3 & pred_prob >= 0.9, ]
 
   chr_arms <- copy(QCtreeCNV::hg19_chr_arms)
-  chr_st_en <- copy(QCtreeCNV::hg19_start_end_centromeres)
 
-  dir.create('./rds')
+  cnv_test <- data.table(chr = c(rep(1, 100), rep(2, 100)),
+                         start = sample(c(sample(1:100, 100), sample(1000:1100, 100)), 200),
+                         end = sample(c(sample(1101:1201, 100), sample(2101:2201, 100)), 200),
+                         numsnp = sample(50:100, 200, replace = T))
+  cnv_test[, length := end - start + 1]
+  cnv_test[length < 1, ]
+  cnv_test
+  fwrite(cnv_test[, .(chr, start, end, numsnp)], './cnv_test.bed', sep = '\t', col.names = F)
 
-  cnvrs <- cnvrs_iou(cnvs, chr_arms, min_iou = 0.6,
+  debugonce(cnvrs_iou)
+  debugonce(create_splits_foverlaps)
+  devtools::load_all()
+  cnvrs <- cnvrs_iou(cnv_test, chr_arms, min_iou = 0.6,
                      max_force_merge_rounds = 4, force_merge_min_overlap = 0.75)
+  fwrite(cnvrs[[2]][, .(chr, start, end, n)], './cnvrs_test.bed', sep = '\t', col.names = F)
 }
