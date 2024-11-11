@@ -12,7 +12,9 @@ cnvrs_iou(
   leiden_res = 1,
   plots_path = NA,
   min_n = 20,
-  max_force_merge_rounds = 5
+  max_force_merge_rounds = 5,
+  force_merge_min_overlap = 0.75,
+  arms_save_plots = c("2p", "16p", "15q", "19p")
 )
 }
 \arguments{

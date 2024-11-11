@@ -14,7 +14,7 @@ binned_cnvs(
 \arguments{
 \item{cnvs}{usual CNV `data.table`}
 
-\item{format}{format for the output table, "wide" and "biot" return a list}
+\item{format}{format for the output table, "count" and "both" return a list}
 
 \item{bins}{for computing the overlap, by default are regular bins created by the helper function `binned_genome`}
 }

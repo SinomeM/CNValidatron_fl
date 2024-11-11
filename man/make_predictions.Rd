@@ -4,7 +4,7 @@
 \alias{make_predictions}
 \title{Make Prediction on a set of CNVs}
 \usage{
-make_predictions(model, root, cnvs, return_pred_dt = F, batches = 1000)
+make_predictions(model, root, cnvs, return_pred_dt = F, batches = 1:1000)
 }
 \arguments{
 \item{model}{pre trained model loaded using `luz::luz_load()`}
