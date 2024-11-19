@@ -145,15 +145,6 @@ create_splits_foverlaps <- function(cnvs_arm, cc, screen_size = 500) {
 
 get_igraph_objs <- function(dt, min_iou, leiden_res, ii, arm, type = '') {
 
-  #hotfix for negative legnth error in foverlaps()
-  dt[, end := end + 1]
-  dt[, len := end - start + 1]
-  if(dt[len < 1, .N] != 0) {
-    warning('Negative len in dt')
-    message('arm ', arm, ' ii ', ii, ' type ', type)
-    dt <- dt[len > 0, ]
-  }
-
   # get all overlapping CNVs
   setkey(dt, start, end)
   dt[, cix := 1:.N]
