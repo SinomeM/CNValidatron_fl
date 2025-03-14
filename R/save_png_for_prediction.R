@@ -20,7 +20,7 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
   dir.create(root, showWarning = F)
 
   if (!'batch' %in% colnames(cnvs)) cnvs[, batch := sample(1:batches, .N, replace = T)]
-  for (i in 1:batches) {
+  for (i in cnvs[, unique(batch)]) {
     dir.create(paste0(root, '/batch', i), showWarnings = F)
     dir.create(paste0(root, '/batch', i, '/new/'), showWarnings = F)
   }
@@ -36,7 +36,11 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
     pt <- paste0(root, '/batch', a$batch, '/new/samp', a$sample_ID, '_st', a$start,
                  '_nsnp', n_real_snps, '.png')
 
-    imager::save.image(imager::as.cimg(dt), pt)
+    tryCatch({
+      imager::save.image(imager::as.cimg(dt), pt)
+    }, error = function(e) {
+      print(paste(pt, 'failed.'))
+    })
 
     if (x %% 100 == 0) gc()
   }
