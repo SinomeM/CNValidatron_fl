@@ -49,7 +49,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   dt <- dt[[1]]
   if (nrow(dt) == 0) {
     warning('Empty tabix, no image generated for sample', samp$sample_ID)
-    return(data.table())
+    return(data.table(), 0)
   }
 
   n_real_snps <- dt[between(position, cnv$start, cnv$end), .N]
