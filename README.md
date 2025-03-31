@@ -61,8 +61,8 @@ save_pngs_prediction(pred_pt, cnvs, samples, snps)
 preds <- make_predictions(luz::luz_load('/path/to/model.rds'),
                           png_pt, cnvs)
 
-# select predicted true CNVs with probability above 0.75
-true_cnvs <- pred[pred %in% 2:3 & pred_prob >= 0.75, ]
+# select predicted true CNVs with probability above 0.5
+true_cnvs <- pred[pred %in% 2:3 & pred_prob >= 0.5, ]
 
 # the model has three categories
 # 1: False
@@ -83,7 +83,7 @@ It requires the same files and format as all the other CNV
 packages I created so you should already have everything.
 
 
-## How to train your on model
+## How to train your own model
 
 You might want to train a custom model for multiple reasons.
 Your dataset might be very different for the ones I have access
