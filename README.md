@@ -17,11 +17,7 @@ You might want to install them manually beforehand.
 ## Citation
 
 If you use this software please cite the following publications:
-
-- Regarding CNV data handling and generation:
-  https://currentprotocols.onlinelibrary.wiley.com/doi/10.1002/cpz1.621
-- Regarding the actual model:
-  https://doi.org/10.1101/2024.09.09.612035
+https://doi.org/10.1101/2024.09.09.612035
 
 
 ## How to run
@@ -35,8 +31,9 @@ To perform the validation of a set of CNVs you will need the following files:
 - samples file (linking each sample to an intensity file)
 - CNVs table
 
-In general you will need all the files described in the CNV calling protocol
-mentioned above (Montalbano et al., 2022, Current Protocol).
+In general you will need all the files described in the our CNV calling protocol
+(Montalbano et al., 2022, Current Protocol,
+https://currentprotocols.onlinelibrary.wiley.com/doi/10.1002/cpz1.621).
 If you are interested in genome wide CNVs rather than in specific
 loci, you can just skip that section of the protocol.
 
@@ -190,7 +187,8 @@ implement it, let me know!
 
 ## Pre-trained model
 
-The model described in the paper above is available upon request.
+The models described are available here
+https://drive.proton.me/urls/KDNEVAS304#HNyVF89SbAaL.
 
 
 ## Bugs, Feature request, Collaborations and Contributions
