@@ -22,7 +22,7 @@
 cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
                       leiden_res = 1, plots_path = NA, min_n = 20,
                       max_force_merge_rounds = 5, force_merge_min_overlap = 0.75,
-                      arms_save_plots = c('2p', '16p', '15q', '19p')) {
+                      arms_save_plots = c('2p', '16p', '15q', '19p'), all_cnvs = F) {
 
   cnvs[, center := round(start + (end-start+1)/2)]
   cnvs_with_CNVR <- data.table()
@@ -36,7 +36,8 @@ cnvrs_iou <- function(cnvs, chr_arm, screen_size = 500, min_iou = 0.75,
 
     if (cnvs_arm[, .N] == 0) next
 
-    splits <- create_splits_foverlaps(cnvs_arm, cc, screen_size)
+    if (all_CNVs) splits <- data.table(ix = 1, start = 0, end = 1000000000)
+    else splits <- create_splits_foverlaps(cnvs_arm, cc, screen_size)
 
     # now we have a more manageable set of CNVs we can proceed with the IOU matrix and the network analysis
     for (ii in 1:nrow(splits)) {
