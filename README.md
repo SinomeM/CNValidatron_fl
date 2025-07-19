@@ -37,6 +37,9 @@ https://currentprotocols.onlinelibrary.wiley.com/doi/10.1002/cpz1.621).
 If you are interested in genome wide CNVs rather than in specific
 loci, you can just skip that section of the protocol.
 
+Some example data in the correct formats is available in `data`.
+
+
 ### Run the prediction model
 
 With that, you can run the actual model on your CNV table as shown in
