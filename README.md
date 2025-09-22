@@ -191,7 +191,7 @@ implement it, let me know!
 ## Pre-trained model
 
 The models described are available here
-https://drive.proton.me/urls/KDNEVAS304#HNyVF89SbAaL.
+https://doi.org/10.5281/zenodo.17174637.
 
 
 ## Bugs, Feature request, Collaborations and Contributions
