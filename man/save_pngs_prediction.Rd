@@ -12,7 +12,7 @@ save_pngs_prediction(
   shrink_lrr = 0.2,
   simple_min_max = F,
   no_parall = F,
-  batches = 1000
+  batches = NULL
 )
 }
 \arguments{

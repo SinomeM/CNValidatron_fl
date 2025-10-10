@@ -1,6 +1,6 @@
 Package: CNValidatron
 Title: Automented CNV Validation with Computer Vision
-Version: 0.0.0.9000
+Version: 0.0.1.0
 Authors@R:
     person("Simone", "Montalbano", , "simone.montalbano@pm.me", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
@@ -17,4 +17,4 @@ Depends:
     luz,
     imager,
     igraph
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
