@@ -104,7 +104,8 @@ the following three classes: false, true deletion, true duplication.
 The format should be the same as the described here
 https://github.com/SinomeM/shinyCNV. That is column `vo`
 for the human evaluation results (1: true, 2: false, 3: unknown)
-and column `GT` for genotype (1: deletions, 2: duplications).
+and column `GT` for genotype (1: deletions, 2: duplications).   
+Unknown CNVs will be ignored by the program.
 
 ```
 # set BiocParall workers (for PNG generation)
