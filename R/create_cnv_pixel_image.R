@@ -1,16 +1,15 @@
 #' Create the matrix for the PNG image
 #'
 #' This function create the pixel matrix that can be saved
-#' as a PNG for further use. All processing is done in the
-#' function load_snps_tbx().
+#' as a PNG for further use. It will also perform some preprocessing, e.g.
+#' reduce the LRR interval to [-1.4 , 1.2],
 #'
 #' @param cnv see load_snps_tbx() documentation
 #' @param samp see load_snps_tbx() documentation
-#' @param snps see load_snps_tbx() documentation
-#' @param adjusted_lrr see load_snps_tbx() documentation
-#' @param min_lrr see load_snps_tbx() documentation
-#' @param max_lrr see load_snps_tbx() documentation
-#' @param shrink_lrr see load_snps_tbx() documentation
+#' @param shrink_lrr shrink LRR values toword the mean (done separately for
+#'        SNPs before / in / after the CNV
+#' @param min_lrr minimum LRR value (lower values are set to the min_lrr)
+#' @param max_lrr maximum LRR value (higher values are set to max_lrr)
 #' @param tmp_plot for developing, if set to 1 plot the "normal"
 #'        LRR/BAF plot, if set to 2 plot the pixelated image in R
 #'
@@ -20,16 +19,15 @@
 #' @import ggplot2
 
 
-plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
-                     tmp_plot = 0, min_lrr = -1.4, max_lrr = 1.3,
-                     simple_min_max = F, use_log = F, blank_small = F,
+plot_cnv <- function(cnv, samp, tmp_plot = 0, shrink_lrr = 0.2, tabix_data = NULL,
+                     min_lrr = -1.4, max_lrr = 1.3, blank_small = F,
                      # the following parameters should not be changed by most users
-                     shrink_lrr = 0.1, w = 96, z = 4, k1 = 31, k2 = 26,
+                     w = 96, z = 4, k1 = 31, k2 = 26,
                      l_wind = 20000000, # top row Mbp
                      mx_lr = 2) {  # top row LRR range
 
+  dt <- tabix_data
   # w k1, k2, z and in_out_ratio are fixed for the moment
-
 
   # everything will be [0,w-1] then I will add 1 to make it [1,w]
   w <- w-1
@@ -41,12 +39,51 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   if (len > 1000000) in_out_ratio <- 5
   ss <- cnv$start - (in_out_ratio*len);  ee <- cnv$end + (in_out_ratio*len)
 
+# from load_snps_tbx() .......
+  start <- cnv$start
+  end <- cnv$end
+  len <- end - start + 1
 
-  # load snps data, ALL chromosome is loaded now!
-  dt <- load_snps_tbx(cnv, samp, snps, in_out_ratio, adjusted_lrr, min_lrr, max_lrr, shrink_lrr)
-  # keep the full chromsome for the third row of the png
-  dt_big <- dt[[2]]
-  dt <- dt[[1]]
+  st <- start - (in_out_ratio*len)
+  st <- ifelse(st < 0, 0, st)
+
+  dt_whole <- copy(dt)
+  dt <- dt[between(position, start - len*in_out_ratio, end + len*in_out_ratio), ]
+
+  ## some preprocessing ##
+  # restrict the lrr space
+  dt[lrr > max_lrr, lrr := max_lrr][lrr < min_lrr, lrr := min_lrr]
+  # if lrr or baf is missing exclude the point
+  dt <- dt[!(is.na(lrr) | is.na(baf)),]
+
+  # compute mean and SD in these three groups, could be simplified using dt[,,by]
+  dt[position < start, group := 1][
+     between(position, start, end), group := 2][position > end, group := 3]
+  ms1 <- dt[group == 1, c(mean(lrr, na.rm = T), sd(lrr, na.rm = T))]
+  ms2 <- dt[group == 2, c(mean(lrr, na.rm = T), sd(lrr, na.rm = T))]
+  ms3 <- dt[group == 3, c(mean(lrr, na.rm = T), sd(lrr, na.rm = T))]
+
+  if (!is.null(shrink_lrr)) {
+    # snps in each group get pulled towards the group mean proportionally
+    # to their distance and shrink_lrr
+    dt[group == 1 & lrr > ms1[1], lrr := lrr - abs(lrr-ms1[1])*shrink_lrr][
+         group == 1 & lrr < ms1[1], lrr := lrr + abs(ms1[1]-lrr)*shrink_lrr]
+
+    dt[group == 2 & lrr > ms2[1], lrr := lrr - abs(lrr-ms2[1])*shrink_lrr][
+         group == 2 & lrr < ms2[1], lrr := lrr + abs(ms2[1]-lrr)*shrink_lrr]
+
+    dt[group == 3 & lrr > ms3[1], lrr := lrr - abs(lrr-ms3[1])*shrink_lrr][
+         group == 3 & lrr < ms3[1], lrr := lrr + abs(ms3[1]-lrr)*shrink_lrr]
+  }
+
+  # ouliers removal, 3SDs. Should not do anything after the rest
+  dt[group == 1 & !between(lrr, ms1[1]-3*ms1[2], ms1[1]+3*ms1[2]), lrr := NA]
+  dt[group == 2 & !between(lrr, ms2[1]-3*ms2[2], ms2[1]+3*ms2[2]), lrr := NA]
+  dt[group == 3 & !between(lrr, ms3[1]-3*ms3[2], ms3[1]+3*ms3[2]), lrr := NA]
+  dt <- dt[!is.na(lrr), ]
+# ........
+
+
   if (nrow(dt) == 0) {
     warning('Empty tabix, no image generated for sample', samp$sample_ID)
     return(list(data.table(), 0))
@@ -81,10 +118,10 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
     ee2 <- ee2 + len_diff
   }
 
-  dt_big <- dt_big[between(position, ss2, ee2),]
-  dt_big[, x := round(((position-ss2)/(ee2-ss2)) * w)]
-  dt_big[, y := round(((lrr-(-mx_lr))/(mx_lr-(-mx_lr))) * k2) + (k1*2 + z*2)]
-  dt_big[, ':=' (x = x+1, y = y+1)]
+  dt_whole <- dt_whole[between(position, ss2, ee2),]
+  dt_whole[, x := round(((position-ss2)/(ee2-ss2)) * w)]
+  dt_whole[, y := round(((lrr-(-mx_lr))/(mx_lr-(-mx_lr))) * k2) + (k1*2 + z*2)]
+  dt_whole[, ':=' (x = x+1, y = y+1)]
 
   w <- w+1
 
@@ -98,7 +135,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
            theme_bw() + xlim(ss, ee) +
            theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
                  axis.title.x = element_blank(), axis.title.y = element_blank())
-    c <- ggplot(dt_big, aes(position, lrr)) + geom_point(alpha = 0.1, colour = 'purple') +
+    c <- ggplot(dt_whole, aes(position, lrr)) + geom_point(alpha = 0.1, colour = 'purple') +
            geom_segment(x = cnv$start, xend = cnv$end, y = 0, yend = 0) +
            ylim(min_lrr, max_lrr) + theme_bw() + xlim(ss2, ee2) +
            theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
@@ -117,7 +154,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
            xlim(0, w) + ylim(k1+z + 1, k1*2 + z + 1) + theme_bw() +
            theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
                  axis.title.x = element_blank(), axis.title.y = element_blank())
-    c <- ggplot(dt_big, aes(x, y)) + geom_point(alpha = 0.05, colour = 'purple') +
+    c <- ggplot(dt_whole, aes(x, y)) + geom_point(alpha = 0.05, colour = 'purple') +
            xlim(0, w) + ylim((k1*2)+(z*2) + 1, w + 1) + theme_bw() +
            theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
                  axis.title.x = element_blank(), axis.title.y = element_blank())
@@ -126,16 +163,9 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
 
 
   # create the pixel map
-  if (simple_min_max) {
-    dt_lrr <- get_normalised_pixel_values_simple(dt_lrr)
-    dt_baf <- get_normalised_pixel_values_simple(dt_baf)
-    dt_big <- get_normalised_pixel_values_simple(dt_big)
-  }
-  else {
     dt_lrr <- get_normalised_pixel_values(dt_lrr, w, in_out_ratio)
     dt_baf <- get_normalised_pixel_values(dt_baf, w, in_out_ratio)
-    dt_big <- get_normalised_pixel_values(dt_big, w, in_out_ratio)
-  }
+    dt_whole <- get_normalised_pixel_values(dt_whole, w, in_out_ratio)
 
   if (blank_small) {
     dt_bf <- dt_lrr[x %in% 47:50, ]
@@ -156,7 +186,7 @@ plot_cnv <- function(cnv, samp, snps = NULL, adjusted_lrr = T,
   setnames(dt, 'N', 'a')
   dt <- merge(dt, dt_baf, by = c('x', 'y'), all.x = T)
   setnames(dt, 'N', 'b')
-  dt <- merge(dt, dt_big, by = c('x', 'y'), all.x = T)
+  dt <- merge(dt, dt_whole, by = c('x', 'y'), all.x = T)
   setnames(dt, 'N', 'c')
   dt[!is.na(a), value := a]
   dt[!is.na(b), value := b]

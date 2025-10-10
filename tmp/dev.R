@@ -23,9 +23,14 @@ pngs_pt <- './tmp/pngs'
 BiocParallel::register(BiocParallel::MulticoreParam(workers=2))
 
 # save the PNGs for all CNVs
-debugonce(save_pngs_prediction)
-save_pngs_prediction(pngs_pt, cnvs[sample_ID == 'sample2',], samples, snps, batches = 2, no_parall = T)
+# debugonce(save_pngs_prediction)
+devtools::load_all()
+unlink(pngs_pt, recursive = TRUE)
+save_pngs_prediction(pngs_pt, cnvs[chr != 22, ], samples, snps, no_parall = T)
 traceback()
+# data for chromosome 22 seems to be missing from the tabix (???)
+
+
 
 # run the prediction algoritm
 preds <- make_predictions(luz::luz_load('./joint.rds'),

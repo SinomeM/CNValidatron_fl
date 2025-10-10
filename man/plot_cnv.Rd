@@ -7,15 +7,12 @@
 plot_cnv(
   cnv,
   samp,
-  snps = NULL,
-  adjusted_lrr = T,
   tmp_plot = 0,
+  shrink_lrr = 0.2,
+  tabix_data = NULL,
   min_lrr = -1.4,
   max_lrr = 1.3,
-  simple_min_max = F,
-  use_log = F,
   blank_small = F,
-  shrink_lrr = 0.1,
   w = 96,
   z = 4,
   k1 = 31,
@@ -29,21 +26,18 @@ plot_cnv(
 
 \item{samp}{see load_snps_tbx() documentation}
 
-\item{snps}{see load_snps_tbx() documentation}
-
-\item{adjusted_lrr}{see load_snps_tbx() documentation}
-
 \item{tmp_plot}{for developing, if set to 1 plot the "normal"
 LRR/BAF plot, if set to 2 plot the pixelated image in R}
 
-\item{min_lrr}{see load_snps_tbx() documentation}
+\item{shrink_lrr}{shrink LRR values toword the mean (done separately for
+SNPs before / in / after the CNV}
 
-\item{max_lrr}{see load_snps_tbx() documentation}
+\item{min_lrr}{minimum LRR value (lower values are set to the min_lrr)}
 
-\item{shrink_lrr}{see load_snps_tbx() documentation}
+\item{max_lrr}{maximum LRR value (higher values are set to max_lrr)}
 }
 \description{
 This function create the pixel matrix that can be saved
-as a PNG for further use. All processing is done in the
-function load_snps_tbx().
+as a PNG for further use. It will also perform some preprocessing, e.g.
+reduce the LRR interval to [-1.4 , 1.2],
 }

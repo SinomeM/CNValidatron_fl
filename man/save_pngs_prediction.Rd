@@ -4,16 +4,7 @@
 \alias{save_pngs_prediction}
 \title{Save the PNG Plots of CNVs for Prediction}
 \usage{
-save_pngs_prediction(
-  root,
-  cnvs,
-  samps,
-  snps,
-  shrink_lrr = 0.2,
-  simple_min_max = F,
-  no_parall = F,
-  batches = 1000
-)
+save_pngs_prediction(root, cnvs, samps, snps, shrink_lrr = 0.2, no_parall = F)
 }
 \arguments{
 \item{root}{root folder for the dataset. Must not exists.}

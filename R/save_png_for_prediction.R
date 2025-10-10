@@ -1,4 +1,3 @@
-
 #' Save the PNG Plots of CNVs for Prediction
 #'
 #' This function is used to create the dataset of PNG images for prediction
@@ -14,41 +13,63 @@
 #' @import data.table
 
 save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
-                                 simple_min_max = F, no_parall = F, batches = NULL) {
+                                 no_parall = F) {
 
   if (dir.exists(root)) warning('Root folder already exists!')
   dir.create(root, showWarning = F)
 
-  if (!'batch' %in% colnames(cnvs)){
-    if (is.null(batches)) stop('Please provide the number of batches')
-    cnvs[, batch := sample(1:batches, .N, replace = T)]
+  # Create folders for each sample
+  for (samp in cnvs[, unique(sample_ID)]) {
+    samp_dir <- paste0(root, '/', samp)
+    dir.create(samp_dir, showWarnings = F)
+    
+    # Create chromosome folders for this sample
+    chroms <- cnvs[sample_ID == samp, unique(chr)]
+    for (chr in chroms) {
+      dir.create(paste0(samp_dir, '/chr', chr), showWarnings = F)
+    }
   }
 
-  for (i in cnvs[, unique(batch)]) {
-    dir.create(paste0(root, '/batch', i), showWarnings = F)
-    dir.create(paste0(root, '/batch', i, '/new/'), showWarnings = F)
+  FUN <- function(samp_id) {
+    # Get all CNVs for this sample
+    sample_cnvs <- cnvs[sample_ID == samp_id]
+    sample_info <- samps[sample_ID == samp_id]
+    
+    # Read all tabix data for chromosomes needed by this sample
+    chroms_needed <- sample_cnvs[, unique(chr)]
+    tabix_data <- list()
+    
+    for (chr in chroms_needed) {
+      tabix_data[[as.character(chr)]] <- load_snps_tbx(data.table(chr = chr),
+                                                       sample_info, snps)
+    }
+    
+    # Process each CNV for this sample
+    for (i in 1:nrow(sample_cnvs)) {
+      a <- sample_cnvs[i]
+      
+      # Get pre-loaded tabix data for this chromosome
+      chr_data <- tabix_data[[as.character(a$chr)]]
+      
+      dt <- plot_cnv(a, sample_info, shrink_lrr = shrink_lrr, tabix_data = chr_data)
+      n_real_snps <- dt[[2]]
+      dt <- dt[[1]]
+      
+      pt <- paste0(root, '/', a$sample_ID, '/chr', a$chr, 
+                   '/st', a$start, '_nsnp', n_real_snps, '.png')
+      
+      tryCatch({
+        imager::save.image(imager::as.cimg(dt), pt)
+      }, error = function(e) {
+        print(paste(pt, 'failed.'))
+      })
+    }
+    
+    gc()
   }
 
-  FUN <- function(x) {
-    a <- cnvs[x]
-
-    dt <- plot_cnv(a, samps[sample_ID == a[, sample_ID], ], snps = snps,
-                   shrink_lrr = shrink_lrr, simple_min_max = simple_min_max)
-    n_real_snps <- dt[[2]]
-    dt <- dt[[1]]
-
-    pt <- paste0(root, '/batch', a$batch, '/new/samp', a$sample_ID, '_st', a$start,
-                 '_nsnp', n_real_snps, '.png')
-
-    tryCatch({
-      imager::save.image(imager::as.cimg(dt), pt)
-    }, error = function(e) {
-      print(paste(pt, 'failed.'))
-    })
-
-    if (x %% 100 == 0) gc()
-  }
-
-  if (no_parall)  null <- lapply(1:nrow(cnvs), FUN)
-  else null <- BiocParallel::bplapply(1:nrow(cnvs), FUN)
+  sample_ids <- cnvs[, unique(sample_ID)]
+  
+  if (no_parall)  null <- lapply(sample_ids, FUN)
+  else null <- BiocParallel::bplapply(sample_ids, FUN)
 }
