@@ -14,12 +14,16 @@
 #' @import data.table
 
 save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
-                                 simple_min_max = F, no_parall = F, batches = 1000) {
-  if (dir.exists(root)) warning('Root folder already exists!')
+                                 simple_min_max = F, no_parall = F, batches = NULL) {
 
+  if (dir.exists(root)) warning('Root folder already exists!')
   dir.create(root, showWarning = F)
 
-  if (!'batch' %in% colnames(cnvs)) cnvs[, batch := sample(1:batches, .N, replace = T)]
+  if (!'batch' %in% colnames(cnvs)){
+    if (is.null(batches)) stop('Please provide the number of batches')
+    cnvs[, batch := sample(1:batches, .N, replace = T)]
+  }
+
   for (i in cnvs[, unique(batch)]) {
     dir.create(paste0(root, '/batch', i), showWarnings = F)
     dir.create(paste0(root, '/batch', i, '/new/'), showWarnings = F)

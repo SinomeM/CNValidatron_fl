@@ -28,7 +28,5 @@ save_pngs_prediction(pngs_pt, cnvs[sample_ID == 'sample2',], samples, snps, batc
 traceback()
 
 # run the prediction algoritm
-model_pt <- paste0('~/Desktop/pdrive/simone/01.Work/projects/',
-                   'CNValidatron_models_2025/trained_models/joint.rds')
-preds <- make_predictions(luz::luz_load(model_pt),
+preds <- make_predictions(luz::luz_load('./joint.rds'),
                           pngs_pt, cnvs)
