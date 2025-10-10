@@ -3,8 +3,9 @@ Title: Automented CNV Validation with Computer Vision
 Version: 0.1.0.0
 Authors@R:
     person("Simone", "Montalbano", , "simone.montalbano@pm.me", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+           comment = c(ORCID = "0000-0002-9846-0560"))
+Description: CNValidatron_fl is an R package that uses deep learning to validate
+             Copy Number Variants (CNVs) detected from SNP array data.
 License: `use_gpl3_license()`
 Encoding: UTF-8
 Imports:
