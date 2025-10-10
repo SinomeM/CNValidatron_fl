@@ -4,5 +4,5 @@
 .RData
 .Ruserdata
 .DS_Store
-./tmp/pngs/*
+tmp/pngs/
 *.rds
