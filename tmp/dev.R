@@ -8,8 +8,6 @@ devtools::install()
 
 devtools::load_all()
 
-usethis::use_github_action("check-standard")
-
 
 # Minimal test run #
 
