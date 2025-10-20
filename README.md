@@ -1,8 +1,5 @@
 # README
 
-<!-- badges: start -->
-[![R-CMD-check](https://github.com/SinomeM/CNValidatron_fl/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/SinomeM/CNValidatron_fl/actions/workflows/R-CMD-check.yaml)
-<!-- badges: end -->
 
 ## How to install
 

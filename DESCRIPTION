@@ -1,6 +1,6 @@
 Package: CNValidatron
 Title: Automented CNV Validation with Computer Vision
-Version: 0.0.1.0
+Version: 0.0.0.9
 Authors@R:
     person("Simone", "Montalbano", , "simone.montalbano@pm.me", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))

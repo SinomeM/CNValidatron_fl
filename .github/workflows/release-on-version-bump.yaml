@@ -1,0 +1,72 @@
+name: Create Release on Version Bump
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'DESCRIPTION'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Check if version changed
+        id: version_check
+        run: |
+          # Get current version
+          CURRENT_VERSION=$(grep "^Version:" DESCRIPTION | sed 's/Version: //')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          
+          # Get previous version
+          git checkout HEAD~1 -- DESCRIPTION 2>/dev/null || echo "No previous version"
+          PREVIOUS_VERSION=$(grep "^Version:" DESCRIPTION | sed 's/Version: //' || echo "0.0.0")
+          git checkout HEAD -- DESCRIPTION
+          
+          echo "previous_version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
+          
+          # Check if version changed
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+            echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
+          else
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+            echo "Version unchanged: $CURRENT_VERSION"
+          fi
+      
+      - name: Create release archive
+        if: steps.version_check.outputs.version_changed == 'true'
+        run: |
+          VERSION=${{ steps.version_check.outputs.current_version }}
+          REPO_NAME=$(basename $GITHUB_REPOSITORY)
+          
+          # Create tarball
+          git archive --format=tar.gz --prefix=${REPO_NAME}-${VERSION}/ HEAD > ${REPO_NAME}-${VERSION}.tar.gz
+          
+          # Create zip
+          git archive --format=zip --prefix=${REPO_NAME}-${VERSION}/ HEAD > ${REPO_NAME}-${VERSION}.zip
+      
+      - name: Create GitHub Release
+        if: steps.version_check.outputs.version_changed == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version_check.outputs.current_version }}
+          name: Release v${{ steps.version_check.outputs.current_version }}
+          body: |
+            Release of version ${{ steps.version_check.outputs.current_version }}
+            
+            See [DESCRIPTION](https://github.com/${{ github.repository }}/blob/v${{ steps.version_check.outputs.current_version }}/DESCRIPTION) for package details.
+          files: |
+            *.tar.gz
+            *.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
