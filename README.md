@@ -236,7 +236,7 @@ implement it, let me know!
 
 ## Pre-trained model
 
-The models described are available here
+The model described in the manuscript is available here
 https://doi.org/10.5281/zenodo.17174637.
 
 
