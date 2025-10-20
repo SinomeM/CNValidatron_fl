@@ -30,6 +30,7 @@ save_pngs_prediction(pngs_pt, cnvs[chr != 22, ], samples, snps, no_parall = T)
 traceback()
 # data for chromosome 22 seems to be missing from the tabix (???)
 
+# OK up to here
 
 
 # run the prediction algoritm

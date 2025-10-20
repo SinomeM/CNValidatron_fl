@@ -22,12 +22,6 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
   for (samp in cnvs[, unique(sample_ID)]) {
     samp_dir <- paste0(root, '/', samp)
     dir.create(samp_dir, showWarnings = F)
-    
-    # Create chromosome folders for this sample
-    chroms <- cnvs[sample_ID == samp, unique(chr)]
-    for (chr in chroms) {
-      dir.create(paste0(samp_dir, '/chr', chr), showWarnings = F)
-    }
   }
 
   FUN <- function(samp_id) {
@@ -56,7 +50,7 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
       dt <- dt[[1]]
       
       pt <- paste0(root, '/', a$sample_ID, '/chr', a$chr, 
-                   '/st', a$start, '_nsnp', n_real_snps, '.png')
+                   '_st', a$start, '_nsnp', n_real_snps, '.png')
       
       tryCatch({
         imager::save.image(imager::as.cimg(dt), pt)
