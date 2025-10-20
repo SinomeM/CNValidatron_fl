@@ -1,3 +1,3 @@
 file_path_tabix	sample_ID
 /Users/sm/Documents/GitHub/CNValidatron_fl/data/tbx/5426511011_R02C01.txt.tabix.gz	sample1
-/Users/sm/Documents/GitHub/CNValidatron_fl/data/tbx/5426511011_R02C01.txt.tabix.gz	sample2
+/Users/sm/Documents/GitHub/CNValidatron_fl/data/tbx/5426511011_R02C01_2.txt.tabix.gz	sample2

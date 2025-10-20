@@ -36,46 +36,88 @@ In general you will need all the files described in the our CNV calling protocol
 (Montalbano et al., 2022, Current Protocol,
 https://currentprotocols.onlinelibrary.wiley.com/doi/10.1002/cpz1.621).
 If you are interested in genome wide CNVs rather than in specific
-loci, you can just skip that section of the protocol.
+loci (as in this case), you can just skip that section of the protocol.
 
 Some example data in the correct formats is available in `data`.
 
 
 ### Run the prediction model
 
-With that, you can run the actual model on your CNV table as shown in
-the following code snippet:
+With that, you can run the actual model on your CNV table.
+The main step of the pipeline run per sample. Here I'm showing a possible how to
+run the program in batches but entirely on R. The for loop can easily be parallelised
+outside R (e.g. across multiple jobs on a cluster).
 
 ```
-# load necessary objects
-snps <- fread('/path/to/snppos_filtered.txt')
-cnvs <- fread('/path/to/cnvs_filtered.txt')
-samples <- fread('/path/to/samples_list.txt')
+# Pipeline #
+
+library(CNValidatron)
+setwd('path/to/working/directory')
+
+# data 
+snps <- fread('./data/hd_1kG_hg19.snppos.filtered.test.gz')
+cnvs <- fread('./data/cnvs.txt')
+cnvs <- cnvs[, prob := NULL][chr != 22, ]
+samples <- fread('./data/samples_list.txt')
 
 # select the folder for PNG files
-png_pt <- '/path/to/folder'
+pngs_pt <- './tmp/pngs'
 
 # set BiocParall parallel worker limit
 BiocParallel::register(BiocParallel::MulticoreParam(workers=2))
 
-# save the PNGs for all CNVs
-save_pngs_prediction(pred_pt, cnvs, samples, snps)
+# Create batches, these can be one per sample or multiple samples per batch.
+batches <- 2
+samples[, batch := sample(1:batches, .N, replace = T)]
 
-# run the prediction algoritm
-preds <- make_predictions(luz::luz_load('/path/to/model.rds'),
-                          png_pt, cnvs)
+# Batches can be parallelized outside of R if needed.
+for (b in 1:batches) {
+  # select samples and CNVs for this batch
+  batch_samps <- samples[batch == b, sample_ID]
+  batch_cnvs <- cnvs[sample_ID %in% batch_samps, ]
 
-# select predicted true CNVs with probability above 0.5
-true_cnvs <- pred[pred %in% 2:3 & pred_prob >= 0.5, ]
+  # batch subfolder
+  pngs_pt_batch <- paste0(pngs_pt, '/batch_', b)
+  # clean just to be sure
+  unlink(pngs_pt_batch, recursive = TRUE)
 
-# the model has three categories
-# 1: False
-# 2: True Deletion
-# 3: True Duplication
+  save_pngs_prediction(pngs_pt_batch, batch_cnvs, samples, snps, no_parall = F)
+
+  preds <- make_predictions(luz::luz_load('./joint.rds'),
+                            pngs_pt_batch, batch_cnvs, return_pred_dt = F)
+  # remove PNGs after prediction has completed
+  unlink(pngs_pt_batch, recursive = TRUE)
+
+  # save predictions for this batch
+  dir.create('./tmp', showWarnings = F) # create tmp folder if needed
+  fwrite(preds, paste0('./tmp/preds_batch_', b, '.txt'), sep = '\t')
+}
+
+# remove main PNG folder
+unlink(pngs_pt, recursive = TRUE)
+
+# Combine all batch predictions
+all_preds <- data.table()
+for (b in 1:batches) {
+  batch_preds <- fread(paste0('./tmp/preds_batch_', b, '.txt'))
+  all_preds <- rbind(all_preds, batch_preds)
+  # remove batch prediction files
+  file.remove(paste0('./tmp/preds_batch_', b, '.txt'))
+}
+
+all_preds
 ```
 
-Notice that at the moment the sample_ID is used in the PNGs file name,
+Assuming the formats were correct and all went well, the resulting `all_preds`
+data.table will contain the additional column `prob`. This is the prediction
+probability of the CNV being true (between 0 and 1) for the specific GT, 1 for
+deletions and 2 for duplications. The parameter `clean_out` can be set to `F` in
+`make_predictions()` if you want to keep all three prediction probabilities
+(`prob_true_del`, `prob_true_dup`, `prob_false`).
+
+**NB**: `sample_ID` is used in the PNGs file name,
 thus is best to not have special character in it (especially '/').
+
 
 ### Suggestions
 
@@ -93,6 +135,7 @@ You might want to train a custom model for multiple reasons.
 Your dataset might be very different for the ones I have access
 to or you use case might be different (e.g. you are interested in
 chromosomal abnormalities).
+
 
 ### Base case
 
@@ -173,6 +216,7 @@ luz_save(fitted_dropout_5_10,
          'path/to/dropout_5_10_ukb_decode.rds')
 ```
 
+
 ### Other cases
 
 If you want to use a different number of classes you need to change
@@ -200,7 +244,7 @@ https://doi.org/10.5281/zenodo.17174637.
 
 Feel free to open an issue here on GitHub.
 For collaboration and big extensions of the program, contact the
-corresponding author in one of the mentioned papers.
+corresponding author of one of the mentioned papers.
 
 Keep in mind I'm not a programmer and my main interest is
 applying methods to do new research so be patient ;)
