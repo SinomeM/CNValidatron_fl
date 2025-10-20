@@ -20,8 +20,8 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
 
   # Create folders for each sample
   for (samp in cnvs[, unique(sample_ID)]) {
-    samp_dir <- paste0(root, '/', samp)
-    dir.create(samp_dir, showWarnings = F)
+    samp_dir <- paste0(root, '/', samp, '/new/')
+    dir.create(samp_dir, showWarnings = F, recursive = T)
   }
 
   FUN <- function(samp_id) {
@@ -49,7 +49,7 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
       n_real_snps <- dt[[2]]
       dt <- dt[[1]]
       
-      pt <- paste0(root, '/', a$sample_ID, '/chr', a$chr, 
+      pt <- paste0(root, '/', a$sample_ID, '/new/chr', a$chr, 
                    '_st', a$start, '_nsnp', n_real_snps, '.png')
       
       tryCatch({

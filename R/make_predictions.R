@@ -17,14 +17,19 @@
 #' @import luz
 #' @import torch
 
-make_predictions <- function(model, root, cnvs, return_pred_dt = F, batches = 1:1000) {
+make_predictions <- function(model, root, cnvs, return_pred_dt = F,
+                             clean_out = T) {
 
   pred_dt_rbind <- data.table()
+  samples <- unique(cnvs$sample_ID)
 
-  for (i in batches) {
-    message(i)
-    bpt <- paste0(root, '/batch', i, '/')
+  for (i in samples) {
+
+    bpt <- paste0(root, '/', i, '/')
+    # if the folder does not exist, or it is empty, skip
     if (!dir.exists(bpt)) next
+    if (length(list.files(bpt)) == 0) next
+
     pred_dt <- image_folder_dataset(bpt, transform = . %>% transform_to_tensor())
     # the output is raw logits
     pred_tens <- predict(model, pred_dt)
@@ -48,27 +53,31 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F, batches = 1:
     colnames(pred_probs) <- c('p_false', 'p_true_del', 'p_true_dup')
     pred_dt <- cbind(pred_dt, pred_probs)
 
-
-    pred_dt[, sample_ID := gsub('.+samp', '', ix)][,
-              sample_ID := as.character(gsub('_.+', '', sample_ID))][,
-              start := gsub('.+st', '', ix)][,
-              start := as.integer(gsub('_.+', '', start))][,
-              real_numsnp := gsub('.+nsnp', '', ix)][,
-              real_numsnp := as.integer(gsub('\\.png', '', real_numsnp))]
-
     pred_dt_rbind <- rbind(pred_dt_rbind, pred_dt)
   }
-
 
   if (return_pred_dt)
     return(pred_dt_rbind)
 
-  pred_dt_rbind[, ix := NULL]
-  cnvs[, ':=' (sample_ID = as.character(sample_ID), start = as.integer(start))]
+  pred_dt_rbind[, ':=' (sample_ID = as.character(gsub(".*/([^/]+)/new/.*", "\\1", ix)),
+                        chr = as.integer(gsub(".*chr([0-9]+)_.*", "\\1", ix)),
+                        start = as.integer(gsub(".*_st([0-9]+)_.*", "\\1", ix)),
+                        real_numsnp = as.integer(gsub(".*_nsnp([0-9]+)\\.png", "\\1", ix)))]
 
-  pred_dt <- merge(pred_dt_rbind, cnvs[, .(sample_ID, chr, start, end, numsnp,
-                                length, conf, GT, CN)],
-                   by = c('sample_ID', 'start'))
+  pred_dt_rbind[, ix := NULL]
+  cnvs[, ':=' (sample_ID = as.character(sample_ID),
+               chr = as.integer(chr),
+               start = as.integer(start))]
+
+  pred_dt <- merge(pred_dt_rbind, cnvs,
+                   by = c('sample_ID', 'chr', 'start'))
+
+  # Assign the probabilty based on the CNV type (GT)
+  pred_dt[GT == 1, prob := p_true_del]
+  pred_dt[GT == 2, prob := p_true_dup]
+
+  if (clean_out)
+    pred_dt[, c('p_false', 'p_true_del', 'p_true_dup', 'pred', 'pred_prob') := NULL]
 
   return(pred_dt)
 }
