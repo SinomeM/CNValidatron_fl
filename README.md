@@ -73,8 +73,8 @@ samples[, batch := sample(1:batches, .N, replace = T)]
 # Batches can be parallelized outside of R if needed.
 for (b in 1:batches) {
   # select samples and CNVs for this batch
-  batch_samps <- samples[batch == b, sample_ID]
-  batch_cnvs <- cnvs[sample_ID %in% batch_samps, ]
+  batch_samps <- samples[batch == b, ]
+  batch_cnvs <- cnvs[sample_ID %in% batch_samps$sample_ID, ]
 
   # batch subfolder
   pngs_pt_batch <- paste0(pngs_pt, '/batch_', b)
