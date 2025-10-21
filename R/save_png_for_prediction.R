@@ -19,7 +19,9 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
   dir.create(root, showWarning = F)
 
   # Create folders for each sample
-  for (samp in cnvs[, unique(sample_ID)]) {
+  sample_ids <- cnvs[, unique(sample_ID)]
+  
+  for (samp in sample_ids) {
     samp_dir <- paste0(root, '/', samp, '/new/')
     dir.create(samp_dir, showWarnings = F, recursive = T)
   }
@@ -61,8 +63,6 @@ save_pngs_prediction <- function(root, cnvs, samps, snps, shrink_lrr = 0.2,
     
     gc()
   }
-
-  sample_ids <- cnvs[, unique(sample_ID)]
   
   if (no_parall)  null <- lapply(sample_ids, FUN)
   else null <- BiocParallel::bplapply(sample_ids, FUN)
