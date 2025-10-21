@@ -81,7 +81,7 @@ for (b in 1:batches) {
   # clean just to be sure
   unlink(pngs_pt_batch, recursive = TRUE)
 
-  save_pngs_prediction(pngs_pt_batch, batch_cnvs, samples, snps, no_parall = F)
+  save_pngs_prediction(pngs_pt_batch, batch_cnvs, batch_samps, snps, no_parall = F)
 
   preds <- make_predictions(luz::luz_load('./joint.rds'),
                             pngs_pt_batch, batch_cnvs, return_pred_dt = F)
