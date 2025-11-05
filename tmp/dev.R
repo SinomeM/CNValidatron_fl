@@ -36,25 +36,3 @@ preds[]
 
 
 
-# Grad-CAM visualization test #
-devtools::load_all()
-
-# Load your trained model
-model <- luz::luz_load('./joint.rds')
-
-# Select a sample PNG
-img_path <- list.files('./tmp/pngs/sample1/new', pattern = '\\.png$',
-                       full.names = TRUE)[7]
-
-# Generate Grad-CAM
-gradcam_result <- generate_gradcam(model, img_path,  target_class = 2)
-
-# Plot the results
-plot_gradcam(gradcam_result)
-
-# Or save to file
-plot_gradcam(gradcam_result, save_path = './tmp/gradcam_visualization.png')
-
-# You can also specify a target class
-gradcam_result_class0 <- generate_gradcam(model, img_path, target_class = 0)
-plot_gradcam(gradcam_result_class0)
