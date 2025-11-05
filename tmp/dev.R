@@ -32,7 +32,7 @@ save_pngs_prediction(pngs_pt, cnvs[chr != 22, ], samples, snps, no_parall = F)
 devtools::load_all()
 preds <- make_predictions(luz::luz_load('./joint.rds'),
                           pngs_pt, cnvs, return_pred_dt = F)
-preds
+preds[]
 
 
 
@@ -43,10 +43,11 @@ devtools::load_all()
 model <- luz::luz_load('./joint.rds')
 
 # Select a sample PNG
-img_path <- list.files('./tmp/pngs/sample1/new', pattern = '\\.png$', full.names = TRUE)[1]
+img_path <- list.files('./tmp/pngs/sample1/new', pattern = '\\.png$',
+                       full.names = TRUE)[7]
 
 # Generate Grad-CAM
-gradcam_result <- generate_gradcam(model, img_path)
+gradcam_result <- generate_gradcam(model, img_path,  target_class = 2)
 
 # Plot the results
 plot_gradcam(gradcam_result)
