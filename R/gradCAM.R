@@ -38,12 +38,28 @@ generate_gradcam <- function(model, img_path, target_class = NULL, target_layer_
   # Forward pass through features to get activations
   activations <- features(img_tensor)
   
-  # Store the last conv layer output
-  conv_output <- activations$clone()$detach()
-  activations$retain_grad()
+  # Store the last conv layer output (before adaptive pooling removes it)
+  # We need to hook into the layer before adaptive pooling
+  # Let's get the output before the last few layers
   
-  # Complete forward pass
-  output <- activations$squeeze()
+  # Re-run with hook to capture the last conv output
+  conv_output <- NULL
+  activations_grad <- NULL
+  
+  # Forward pass to get conv output (before adaptive pooling)
+  x <- img_tensor
+  for (i in 1:length(features)) {
+    x <- features[[i]](x)
+    # Capture output after last conv2d (before adaptive pooling)
+    if (i == length(features) - 2) {  # Before adaptive pool and last dropout
+      conv_output <- x$clone()
+      x$retain_grad()
+      activations_grad <- x
+    }
+  }
+  
+  # Complete forward pass through classifier
+  output <- x$squeeze()
   output <- classifier(output)
   
   # If target_class not specified, use the predicted class
@@ -58,7 +74,7 @@ generate_gradcam <- function(model, img_path, target_class = NULL, target_layer_
   score$backward()
   
   # Get gradients of the target class w.r.t. feature maps
-  gradients <- activations$grad
+  gradients <- activations_grad$grad
   
   # Global average pooling of gradients
   weights <- gradients$mean(dim = c(3, 4), keepdim = TRUE)
@@ -73,6 +89,16 @@ generate_gradcam <- function(model, img_path, target_class = NULL, target_layer_
   
   # Convert to R array and resize to original image size
   cam_array <- as.array(cam$squeeze()$cpu())
+  
+  # Ensure cam_array is 2D
+  if (length(dim(cam_array)) == 0) {
+    cam_array <- matrix(cam_array, nrow = 1, ncol = 1)
+  } else if (length(dim(cam_array)) == 1) {
+    # Make it a square-ish matrix
+    n <- length(cam_array)
+    side <- ceiling(sqrt(n))
+    cam_array <- matrix(c(cam_array, rep(0, side^2 - n)), nrow = side, ncol = side)
+  }
   
   # Resize heatmap to match input image dimensions
   cam_resized <- resize_heatmap(cam_array, dim(img)[1:2])
@@ -90,6 +116,16 @@ generate_gradcam <- function(model, img_path, target_class = NULL, target_layer_
 
 #' Resize heatmap to target dimensions
 resize_heatmap <- function(heatmap, target_dims) {
+  # Ensure heatmap is a matrix
+  if (!is.matrix(heatmap)) {
+    heatmap <- as.matrix(heatmap)
+  }
+  
+  # Handle edge cases
+  if (nrow(heatmap) == 0 || ncol(heatmap) == 0) {
+    return(matrix(0, nrow = target_dims[1], ncol = target_dims[2]))
+  }
+  
   x_old <- seq(0, 1, length.out = nrow(heatmap))
   y_old <- seq(0, 1, length.out = ncol(heatmap))
   
