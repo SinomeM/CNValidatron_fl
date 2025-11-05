@@ -36,3 +36,4 @@ preds[]
 
 
 
+# Find very good CNVs to use as examples, both deletions and duplications
