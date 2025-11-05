@@ -73,15 +73,15 @@ samples[, batch := sample(1:batches, .N, replace = T)]
 # Batches can be parallelized outside of R if needed.
 for (b in 1:batches) {
   # select samples and CNVs for this batch
-  batch_samps <- samples[batch == b, sample_ID]
-  batch_cnvs <- cnvs[sample_ID %in% batch_samps, ]
+  batch_samps <- samples[batch == b, ]
+  batch_cnvs <- cnvs[sample_ID %in% batch_samps$sample_ID, ]
 
   # batch subfolder
   pngs_pt_batch <- paste0(pngs_pt, '/batch_', b)
   # clean just to be sure
   unlink(pngs_pt_batch, recursive = TRUE)
 
-  save_pngs_prediction(pngs_pt_batch, batch_cnvs, samples, snps, no_parall = F)
+  save_pngs_prediction(pngs_pt_batch, batch_cnvs, batch_samps, snps, no_parall = F)
 
   preds <- make_predictions(luz::luz_load('./joint.rds'),
                             pngs_pt_batch, batch_cnvs, return_pred_dt = F)
