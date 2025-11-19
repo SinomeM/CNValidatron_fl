@@ -34,6 +34,3 @@ preds <- make_predictions(luz::luz_load('./joint.rds'),
                           pngs_pt, cnvs, return_pred_dt = F)
 preds[]
 
-
-
-# Find very good CNVs to use as examples, both deletions and duplications
