@@ -11,6 +11,8 @@ devtools::load_all()
 
 # Minimal test run #
 
+devtools::load_all()
+
 # load necessary objects
 snps <- fread('./data/hd_1kG_hg19.snppos.filtered.test.gz')
 cnvs <- fread('./data/cnvs.txt')
@@ -32,5 +34,12 @@ save_pngs_prediction(pngs_pt, cnvs[chr != 22, ], samples, snps, no_parall = F)
 devtools::load_all()
 preds <- make_predictions(luz::luz_load('./joint.rds'),
                           pngs_pt, cnvs, return_pred_dt = F)
-preds
+preds[]
 
+# One single false CNV
+make_predictions(luz::luz_load('./joint.rds'),
+                 pngs_pt, cnvs[1], return_pred_dt = F)[]
+
+# One single true CNV
+make_predictions(luz::luz_load('./joint.rds'),
+                 pngs_pt, cnvs[3], return_pred_dt = F)[]
