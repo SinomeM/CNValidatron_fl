@@ -28,10 +28,8 @@ BiocParallel::register(BiocParallel::MulticoreParam(workers=2))
 # Save the PNGs for all CNVs
 unlink(pngs_pt, recursive = TRUE)
 save_pngs_prediction(pngs_pt, cnvs[chr != 22, ], samples, snps, no_parall = F)
-# data for chromosome 22 seems to be missing from the tabix (???)
 
 # Run the prediction algoritm
-devtools::load_all()
 preds <- make_predictions(luz::luz_load('./joint.rds'),
                           pngs_pt, cnvs, return_pred_dt = F)
 preds[]
@@ -43,3 +41,16 @@ make_predictions(luz::luz_load('./joint.rds'),
 # One single true CNV
 make_predictions(luz::luz_load('./joint.rds'),
                  pngs_pt, cnvs[3], return_pred_dt = F)[]
+
+
+
+
+# Test one single CNV #
+devtools::load_all()
+unlink(pngs_pt, recursive = TRUE)
+save_pngs_prediction(pngs_pt, cnvs[1], samples, snps, no_parall = F)
+
+# Run the prediction algoritm
+test <- make_predictions(luz::luz_load('./joint.rds'),
+                          pngs_pt, cnvs[1], return_pred_dt = T)
+test[] # almsot there, duplicated columns for some reason (?)

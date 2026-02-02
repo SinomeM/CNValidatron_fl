@@ -33,24 +33,43 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F,
     pred_dt <- image_folder_dataset(bpt, transform = . %>% transform_to_tensor())
     # the output is raw logits
     pred_tens <- predict(model, pred_dt)
-    # convert to probabilities
-    pred_tens <- nnf_softmax(pred_tens, dim = 2)
 
-    # the classes are
-    # false:   1
-    # tru_del: 3
-    # tru_dup: 3
+    # normal case, multiple CNVs per samples
+    if (length(dim(pred_tens)) == 2) {
+      # convert to probabilities
+      pred_tens <- nnf_softmax(pred_tens, dim = 2)
 
-    pred_ix <- as.matrix(torch_argmax(pred_tens, dim = 2))[, 1]
-    pred_probs <- round(as.matrix(pred_tens), 3)
+      # the classes are
+      # false:   1
+      # tru_del: 2
+      # tru_dup: 3
+      pred_ix <- as.matrix(torch_argmax(pred_tens, dim = 2))[, 1]
+      pred_probs <- round(as.matrix(pred_tens), 3)
 
-    pred_dt <- data.table(ix = pred_dt$samples[[1]], pred = pred_ix)
+      pred_dt <- data.table(ix = pred_dt$samples[[1]], pred = pred_ix)
 
-    for (i in 1:nrow(pred_dt))
-      pred_dt[i, pred_prob := pred_probs[i, pred_ix[i]]]
+      for (i in 1:nrow(pred_dt))
+        pred_dt[i, pred_prob := pred_probs[i, pred_ix[i]]]
 
-    pred_probs <- as.data.table(pred_probs)
-    colnames(pred_probs) <- c('p_false', 'p_true_del', 'p_true_dup')
+      pred_probs <- as.data.table(pred_probs)
+      colnames(pred_probs) <- c('p_false', 'p_true_del', 'p_true_dup')
+    }
+
+    # edge case, only one CNV for the sample
+    if (length(dim(pred_tens)) == 1) {
+      pred_tens <- nnf_softmax(pred_tens, dim = 1)
+      pred_ix <- as.matrix(torch_argmax(pred_tens, dim = 1))[, 1]
+      pred_probs <- round(as.matrix(pred_tens), 3)
+      pred_dt <- data.table(ix = pred_dt$samples[[1]], pred = pred_ix)
+
+      for (i in 1:nrow(pred_dt))
+        pred_dt[i, pred_prob := pred_probs[i, pred_ix[i]]]
+
+      pred_probs <- data.table(p_false = pred_probs[1],
+                               p_true_del = pred_probs[2],
+                               p_true_dup = pred_probs[3])
+    }
+    
     pred_dt <- cbind(pred_dt, pred_probs)
 
     pred_dt_rbind <- rbind(pred_dt_rbind, pred_dt)
