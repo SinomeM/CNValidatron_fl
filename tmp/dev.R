@@ -27,7 +27,7 @@ BiocParallel::register(BiocParallel::MulticoreParam(workers=2))
 
 # Save the PNGs for all CNVs
 unlink(pngs_pt, recursive = TRUE)
-save_pngs_prediction(pngs_pt, cnvs[chr != 22, ], samples, snps, no_parall = F)
+save_pngs_prediction(pngs_pt, cnvs, samples, snps, no_parall = F)
 
 # Run the prediction algoritm
 preds <- make_predictions(luz::luz_load('./joint.rds'),
@@ -47,10 +47,11 @@ make_predictions(luz::luz_load('./joint.rds'),
 
 # Test one single CNV #
 devtools::load_all()
+test_cnv <- cnvs[4]
 unlink(pngs_pt, recursive = TRUE)
-save_pngs_prediction(pngs_pt, cnvs[1], samples, snps, no_parall = F)
+save_pngs_prediction(pngs_pt, test_cnv, samples, snps, no_parall = F)
 
 # Run the prediction algoritm
 test <- make_predictions(luz::luz_load('./joint.rds'),
-                          pngs_pt, cnvs[1], return_pred_dt = T)
-test[] # almsot there, duplicated columns for some reason (?)
+                          pngs_pt, test_cnv, return_pred_dt = T)
+test[] # good
