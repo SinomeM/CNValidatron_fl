@@ -47,7 +47,7 @@ make_predictions(luz::luz_load('./joint.rds'),
 
 # Test one single CNV #
 devtools::load_all()
-test_cnv <- cnvs[4]
+test_cnv <- cnvs[3]
 unlink(pngs_pt, recursive = TRUE)
 save_pngs_prediction(pngs_pt, test_cnv, samples, snps, no_parall = F)
 

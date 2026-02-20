@@ -63,7 +63,7 @@ make_predictions <- function(model, root, cnvs, return_pred_dt = F,
       pred_dt <- data.table(ix = pred_dt$samples[[1]], pred = pred_ix)
 
       for (i in 1:nrow(pred_dt))
-        pred_dt[i, pred_prob := pred_probs[i, pred_ix[i]]]
+        pred_dt[i, pred_prob := pred_probs[pred_ix[i]]]
 
       pred_probs <- data.table(p_false = pred_probs[1],
                                p_true_del = pred_probs[2],
