@@ -18,7 +18,7 @@ binned_cnvs <- function(cnvs, format = c('long', 'count', 'wide', 'both'),
   dty <- bins
   setkey(dtx, chr, start, end)
   setkey(dty, chr, start, end)
-  dto <-  unique(foverlaps(dtx, dty))
+  dto <-  unique(foverlaps(dtx, dty, nomatch = NULL))
 
   if (format == 'long') return(dto)
   # add the count table, one line per "variant"
