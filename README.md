@@ -18,7 +18,7 @@ You might want to install them manually beforehand.
 ## Citation
 
 If you use this software please cite the following publications:
-https://doi.org/10.1101/2024.09.09.612035
+https://link.springer.com/article/10.1186/s12859-026-06375-6
 
 
 ## How to run
